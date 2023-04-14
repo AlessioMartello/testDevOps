@@ -1,0 +1,471 @@
+{
+	"name": "WorkerExcel",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataLakeStorageLinkedService",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Worker",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Worker Demo.xlsx",
+				"fileSystem": "data"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "PERSONNELNUMBER",
+				"type": "String"
+			},
+			{
+				"name": "ADDEDFIELDS",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSBOOKS",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSCITY",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSCOUNTRYREGIONID",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSCOUNTRYREGIONISOCODE",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSCOUNTY",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSDISTRICTNAME",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSLOCATIONID",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSNAMEDESCRIPTION",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSPURPOSE",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSSTATE",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSSTREET",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSVALIDFROM",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSVALIDTO",
+				"type": "String"
+			},
+			{
+				"name": "ADDRESSZIPCODE",
+				"type": "String"
+			},
+			{
+				"name": "ALLOWREHIRE",
+				"type": "String"
+			},
+			{
+				"name": "ANNIVERSARYDATETIME",
+				"type": "String"
+			},
+			{
+				"name": "BIRTHDATE",
+				"type": "String"
+			},
+			{
+				"name": "CITIZENSHIPCOUNTRYREGION",
+				"type": "String"
+			},
+			{
+				"name": "DECEASEDDATE",
+				"type": "String"
+			},
+			{
+				"name": "DISABLEDVERIFICATIONDATE",
+				"type": "String"
+			},
+			{
+				"name": "EDUCATION",
+				"type": "String"
+			},
+			{
+				"name": "ELECTRONICLOCATIONID",
+				"type": "String"
+			},
+			{
+				"name": "ETHNICORIGINID",
+				"type": "String"
+			},
+			{
+				"name": "EXPATRIATERULINGVALIDFROM",
+				"type": "String"
+			},
+			{
+				"name": "EXPATRIATERULINGVALIDTO",
+				"type": "String"
+			},
+			{
+				"name": "FATHERBIRTHCOUNTRYREGION",
+				"type": "String"
+			},
+			{
+				"name": "FIRSTNAME",
+				"type": "String"
+			},
+			{
+				"name": "GENDER",
+				"type": "String"
+			},
+			{
+				"name": "IDENTITYEMAIL",
+				"type": "String"
+			},
+			{
+				"name": "IDENTITYPROVIDER",
+				"type": "String"
+			},
+			{
+				"name": "ISDISABLED",
+				"type": "String"
+			},
+			{
+				"name": "ISDISABLEDVETERAN",
+				"type": "String"
+			},
+			{
+				"name": "ISEXPATRIATERULINGAPPLICABLE",
+				"type": "String"
+			},
+			{
+				"name": "ISFULLTIMESTUDENT",
+				"type": "String"
+			},
+			{
+				"name": "KNOWNAS",
+				"type": "String"
+			},
+			{
+				"name": "LANGUAGEID",
+				"type": "String"
+			},
+			{
+				"name": "LASTNAME",
+				"type": "String"
+			},
+			{
+				"name": "LASTNAMEPREFIX",
+				"type": "String"
+			},
+			{
+				"name": "MARITALSTATUS",
+				"type": "String"
+			},
+			{
+				"name": "MIDDLENAME",
+				"type": "String"
+			},
+			{
+				"name": "MILITARYSERVICEENDDATE",
+				"type": "String"
+			},
+			{
+				"name": "MILITARYSERVICESTARTDATE",
+				"type": "String"
+			},
+			{
+				"name": "MOTHERBIRTHCOUNTRYREGION",
+				"type": "String"
+			},
+			{
+				"name": "NAME",
+				"type": "String"
+			},
+			{
+				"name": "NAMEALIAS",
+				"type": "String"
+			},
+			{
+				"name": "NAMESEQUENCEDISPLAYAS",
+				"type": "String"
+			},
+			{
+				"name": "NATIONALITYCOUNTRYREGION",
+				"type": "String"
+			},
+			{
+				"name": "NATIVELANGUAGEID",
+				"type": "String"
+			},
+			{
+				"name": "NUMBEROFDEPENDENTS",
+				"type": "String"
+			},
+			{
+				"name": "OBJECTID",
+				"type": "String"
+			},
+			{
+				"name": "OFFICELOCATION",
+				"type": "String"
+			},
+			{
+				"name": "OFFICELOCATIONID",
+				"type": "String"
+			},
+			{
+				"name": "ORIGINALHIREDATETIME",
+				"type": "String"
+			},
+			{
+				"name": "PARTYNUMBER",
+				"type": "String"
+			},
+			{
+				"name": "PARTYTYPE",
+				"type": "String"
+			},
+			{
+				"name": "PERSONALSUFFIX",
+				"type": "String"
+			},
+			{
+				"name": "PERSONALTITLE",
+				"type": "String"
+			},
+			{
+				"name": "PERSONBIRTHCITY",
+				"type": "String"
+			},
+			{
+				"name": "PERSONBIRTHCOUNTRYREGION",
+				"type": "String"
+			},
+			{
+				"name": "PERSONDETAILSVALIDFROM",
+				"type": "String"
+			},
+			{
+				"name": "PERSONDETAILSVALIDTO",
+				"type": "String"
+			},
+			{
+				"name": "PERSONUSERVALIDFROM",
+				"type": "String"
+			},
+			{
+				"name": "PERSONUSERVALIDTO",
+				"type": "String"
+			},
+			{
+				"name": "PHONETICFIRSTNAME",
+				"type": "String"
+			},
+			{
+				"name": "PHONETICLASTNAME",
+				"type": "String"
+			},
+			{
+				"name": "PHONETICMIDDLENAME",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYADDRESSLOCATION",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTEMAIL",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTEMAILDESCRIPTION",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTEMAILISIM",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTEMAILISPRIVATE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTEMAILPURPOSE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTFACEBOOK",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTFACEBOOKDESCRIPTION",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTFACEBOOKISPRIVATE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTFACEBOOKPURPOSE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTFAX",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTFAXDESCRIPTION",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTFAXEXTENSION",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTFAXISPRIVATE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTFAXPURPOSE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTLINKEDIN",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTLINKEDINDESCRIPTION",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTLINKEDINISPRIVATE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTLINKEDINPURPOSE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTPHONE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTPHONEDESCRIPTION",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTPHONEEXTENSION",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTPHONEISMOBILE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTPHONEISPRIVATE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTPHONEPURPOSE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTTWITTER",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTTWITTERDESCRIPTION",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTTWITTERISPRIVATE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTTWITTERPURPOSE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTURL",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTURLDESCRIPTION",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTURLISPRIVATE",
+				"type": "String"
+			},
+			{
+				"name": "PRIMARYCONTACTURLPURPOSE",
+				"type": "String"
+			},
+			{
+				"name": "PROFESSIONALSUFFIX",
+				"type": "String"
+			},
+			{
+				"name": "PROFESSIONALTITLE",
+				"type": "String"
+			},
+			{
+				"name": "SENIORITYDATE",
+				"type": "String"
+			},
+			{
+				"name": "SUMMARYVALIDFROM",
+				"type": "String"
+			},
+			{
+				"name": "SUMMARYVALIDTO",
+				"type": "String"
+			},
+			{
+				"name": "TITLEID",
+				"type": "String"
+			},
+			{
+				"name": "USER",
+				"type": "String"
+			},
+			{
+				"name": "VETERANSTATUSID",
+				"type": "String"
+			},
+			{
+				"name": "WORKERSTATUS",
+				"type": "String"
+			},
+			{
+				"name": "WORKERTYPE",
+				"type": "String"
+			},
+			{
+				"name": "WORKSFROMHOME",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

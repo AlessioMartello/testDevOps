@@ -1,0 +1,13 @@
+{
+	"name": "Fields_rest",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "Field_api",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

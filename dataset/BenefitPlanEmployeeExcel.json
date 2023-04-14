@@ -1,0 +1,267 @@
+{
+	"name": "BenefitPlanEmployeeExcel",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataLakeStorageLinkedService",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Benefits_plan_employee",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Benefits plan employee Demo.xlsx",
+				"fileSystem": "data"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "PERSONNELNUMBER",
+				"type": "String"
+			},
+			{
+				"name": "PLANPERIODID",
+				"type": "String"
+			},
+			{
+				"name": "PLANID",
+				"type": "String"
+			},
+			{
+				"name": "COVERAGEOPTIONID",
+				"type": "String"
+			},
+			{
+				"name": "VALIDFROM",
+				"type": "String"
+			},
+			{
+				"name": "VALIDTO",
+				"type": "String"
+			},
+			{
+				"name": "ADMINISTRATIVESTARTDATETIME",
+				"type": "String"
+			},
+			{
+				"name": "AMOUNTADMIN",
+				"type": "String"
+			},
+			{
+				"name": "AMOUNTEMPLOYEE",
+				"type": "String"
+			},
+			{
+				"name": "AMOUNTEMPLOYER",
+				"type": "String"
+			},
+			{
+				"name": "ANNUALCONTRIBUTION",
+				"type": "String"
+			},
+			{
+				"name": "BUNDLEDID",
+				"type": "String"
+			},
+			{
+				"name": "BUNDLEMASTER",
+				"type": "String"
+			},
+			{
+				"name": "CANCELLATION",
+				"type": "String"
+			},
+			{
+				"name": "CANCELLATIONBY",
+				"type": "String"
+			},
+			{
+				"name": "CANCELLATIONDATETIME",
+				"type": "String"
+			},
+			{
+				"name": "CANCELREASONCODEID",
+				"type": "String"
+			},
+			{
+				"name": "COVERAGEAMOUNT",
+				"type": "String"
+			},
+			{
+				"name": "COVERAGECODE",
+				"type": "String"
+			},
+			{
+				"name": "COVERAGEENDDATETIME",
+				"type": "String"
+			},
+			{
+				"name": "COVERAGESTARTDATETIME",
+				"type": "String"
+			},
+			{
+				"name": "CREDITAPPLIEDVALUE",
+				"type": "String"
+			},
+			{
+				"name": "CREDITHASRATE",
+				"type": "String"
+			},
+			{
+				"name": "CREDITLIFEEVENTOPENALLOCATION",
+				"type": "String"
+			},
+			{
+				"name": "CREDITLIFEEVENTPREVENTADDALLOCATION",
+				"type": "String"
+			},
+			{
+				"name": "CREDITLIFEEVENTPREVENTSUBALLOCATION",
+				"type": "String"
+			},
+			{
+				"name": "DEDUCTIONENDDATETIME",
+				"type": "String"
+			},
+			{
+				"name": "DEDUCTIONSTARTDATETIME",
+				"type": "String"
+			},
+			{
+				"name": "DEFAULTOPTION",
+				"type": "String"
+			},
+			{
+				"name": "ENROLLMENTCONFIRMED",
+				"type": "String"
+			},
+			{
+				"name": "ENROLLMENTCONFIRMEDBY",
+				"type": "String"
+			},
+			{
+				"name": "ENROLLMENTCONFIRMEDDATETIME",
+				"type": "String"
+			},
+			{
+				"name": "ENROLLMENTSTARTDATETIME",
+				"type": "String"
+			},
+			{
+				"name": "ESSCHECKEDOUT",
+				"type": "String"
+			},
+			{
+				"name": "LEGALENTITYID",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENT",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTALLOWCANCELLATION",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTALLOWCANCELLATIONPREV",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTAUTOCANCELPLAN",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTAUTOCANCELPLANPREV",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTAUTOREOPENELIGIBILITY",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTAUTOREOPENELIGIBILITYPREV",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTCHANGECOVERAGE",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTCHANGECOVERAGEPREV",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTCHANGETONEWPLAN",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTCHANGETONEWPLANPREV",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTPREV",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTREPORTINGWINDOW",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTREPORTINGWINDOWPREV",
+				"type": "String"
+			},
+			{
+				"name": "LIFEEVENTTYPES",
+				"type": "String"
+			},
+			{
+				"name": "PAYPERIOD",
+				"type": "String"
+			},
+			{
+				"name": "PERCENTAGE",
+				"type": "String"
+			},
+			{
+				"name": "PERIODEMPLOYEENAME",
+				"type": "String"
+			},
+			{
+				"name": "PLANDESCRIPTION",
+				"type": "String"
+			},
+			{
+				"name": "PLANTYPECODE",
+				"type": "String"
+			},
+			{
+				"name": "PLANTYPEDESIGNEETYPE",
+				"type": "String"
+			},
+			{
+				"name": "PLANTYPEID",
+				"type": "String"
+			},
+			{
+				"name": "PROGRAMID",
+				"type": "String"
+			},
+			{
+				"name": "REASONCODEID",
+				"type": "String"
+			},
+			{
+				"name": "REOPENREASONCODEID",
+				"type": "String"
+			},
+			{
+				"name": "STATUS",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

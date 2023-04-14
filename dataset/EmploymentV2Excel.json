@@ -1,0 +1,59 @@
+{
+	"name": "EmploymentV2Excel",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataLakeStorageLinkedService",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Employment_V2",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Employment V2 Demo.xlsx",
+				"fileSystem": "data"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "PERSONNELNUMBER",
+				"type": "String"
+			},
+			{
+				"name": "LEGALENTITYID",
+				"type": "String"
+			},
+			{
+				"name": "EMPLOYMENTID",
+				"type": "String"
+			},
+			{
+				"name": "CALENDARID",
+				"type": "String"
+			},
+			{
+				"name": "DIMENSIONDISPLAYVALUE",
+				"type": "String"
+			},
+			{
+				"name": "EMPLOYMENTENDDATE",
+				"type": "String"
+			},
+			{
+				"name": "EMPLOYMENTSTARTDATE",
+				"type": "String"
+			},
+			{
+				"name": "REGULATORYESTABLISHMENTID",
+				"type": "String"
+			},
+			{
+				"name": "WORKERTYPE",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

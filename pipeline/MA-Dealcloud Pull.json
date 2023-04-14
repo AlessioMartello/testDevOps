@@ -1,0 +1,297 @@
+{
+	"name": "MA-Dealcloud Pull",
+	"properties": {
+		"activities": [
+			{
+				"name": "Get Bearer",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.00:10:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://itventuresandbox.dealcloud.eu/api/rest/v1/oauth/token",
+					"method": "POST",
+					"headers": {
+						"Authorization": "Basic MTc0Nzc6ejZSVHNYdUx3dkZELU9YeTd4aVg3ZG1lTGVRZmR4bU4zLUJUWE1SQkVCdzE=",
+						"Content-Type": "application/x-www-form-urlencoded"
+					},
+					"body": "scope=data&grant_type=client_credentials"
+				}
+			},
+			{
+				"name": "Get Entries",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Get Bearer",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:10:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://itventuresandbox.dealcloud.eu/api/rest/v4/data/entrydata/ConnectCustomer/entries/history",
+					"method": "GET",
+					"headers": {
+						"Authorization": {
+							"value": "@concat('Bearer ', string(activity('Get Bearer').output.access_token))",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Get Fields",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Get Bearer",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:10:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://itventuresandbox.dealcloud.eu/api/rest/v4/schema/entrytypes/Fund/fields",
+					"method": "GET",
+					"headers": {
+						"Authorization": {
+							"value": "@concat('Bearer ', string(activity('Get Bearer').output.access_token))",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Fields import",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Get Fields",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:10:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[SPMattA].[FieldIDimport]",
+					"storedProcedureParameters": {
+						"Response": {
+							"value": {
+								"value": "@activity('Get Fields').output.Response",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "sandbox_db",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Entries import",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Get Entries",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:10:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[SPMattA].[EntryIDimport]",
+					"storedProcedureParameters": {
+						"Response": {
+							"value": {
+								"value": "@activity('Get Entries').output.Response",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "sandbox_db",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Payload Select",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Fields import",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Entries import",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:10:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "sandbox_db",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": "select fieldId, entryId\nfrom MattA.FieldIDs\ncross join MattA.EntryIDs;"
+						}
+					]
+				}
+			},
+			{
+				"name": "Data pull",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "Payload Select",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:10:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"url": "https://itventuresandbox.dealcloud.eu/api/rest/v4/data/entrydata/get?resolveReferenceUrl=true&fillExtendedData=true",
+					"method": "POST",
+					"headers": {
+						"Authorization": {
+							"value": "@concat('Bearer ', string(activity('Get Bearer').output.access_token))",
+							"type": "Expression"
+						}
+					},
+					"body": {
+						"value": "@activity('Payload Select').output.resultSets[0].rows",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "Data dump",
+				"type": "SqlServerStoredProcedure",
+				"dependsOn": [
+					{
+						"activity": "Data pull",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.00:10:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"storedProcedureName": "[SPMattA].[StagingImport]",
+					"storedProcedureParameters": {
+						"Response": {
+							"value": {
+								"value": "@activity('Data pull').output.Response",
+								"type": "Expression"
+							},
+							"type": "String"
+						}
+					}
+				},
+				"linkedServiceName": {
+					"referenceName": "sandbox_db",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "Set variable1",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "Data pull",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "contentLength",
+					"value": {
+						"value": "@activity('Data pull').output.ADFWebActivityResponseHeaders.Content-Length",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"variables": {
+			"contentLength": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-03-13T12:01:00Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

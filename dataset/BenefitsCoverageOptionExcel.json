@@ -1,0 +1,31 @@
+{
+	"name": "BenefitsCoverageOptionExcel",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataLakeStorageLinkedService",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Benefits_coverage_option_perso",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Benefits coverage option personal contacts eligbility option Demo.xlsx",
+				"fileSystem": "data"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "COVERAGEOPTIONID",
+				"type": "String"
+			},
+			{
+				"name": "PERSONALCONTACTSELIGIBILITYOPTIONID",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

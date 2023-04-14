@@ -1,0 +1,13 @@
+{
+	"name": "Field_api",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "RestService",
+		"typeProperties": {
+			"url": "https://itventuresandbox.dealcloud.eu/api/rest/v4/schema/entrytypes/ADVWRKSProductCategory_1/fields",
+			"enableServerCertificateValidation": true,
+			"authenticationType": "Anonymous"
+		}
+	}
+}

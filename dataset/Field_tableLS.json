@@ -1,0 +1,23 @@
+{
+	"name": "Field_tableLS",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "sandbox_db",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "FieldIDs",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "MattA",
+			"table": "FieldIDs"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

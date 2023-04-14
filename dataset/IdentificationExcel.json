@@ -1,0 +1,59 @@
+{
+	"name": "IdentificationExcel",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataLakeStorageLinkedService",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Identification",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Identification Demo.xlsx",
+				"fileSystem": "data"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "PARTYNUMBER",
+				"type": "String"
+			},
+			{
+				"name": "IDENTIFICATIONTYPEID",
+				"type": "String"
+			},
+			{
+				"name": "IDENTIFICATIONNUMBER",
+				"type": "String"
+			},
+			{
+				"name": "DESCRIPTION",
+				"type": "String"
+			},
+			{
+				"name": "ENTRYTYPE",
+				"type": "String"
+			},
+			{
+				"name": "EXPIRATIONDATE",
+				"type": "String"
+			},
+			{
+				"name": "ISPRIMARY",
+				"type": "String"
+			},
+			{
+				"name": "ISSUEDDATE",
+				"type": "String"
+			},
+			{
+				"name": "ISSUINGAGENCYID",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

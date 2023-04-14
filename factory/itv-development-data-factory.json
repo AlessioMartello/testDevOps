@@ -1,0 +1,9 @@
+{
+	"name": "itv-development-data-factory",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "4d32efe7-f8d1-4796-a382-2d7ad547db79",
+		"tenantId": "01382254-8b81-4369-885b-1aaeed3535f5"
+	}
+}

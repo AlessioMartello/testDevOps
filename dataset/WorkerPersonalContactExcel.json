@@ -1,0 +1,107 @@
+{
+	"name": "WorkerPersonalContactExcel",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "DataLakeStorageLinkedService",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Worker_personal_contact_person",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Worker personal contact person Demo.xlsx",
+				"fileSystem": "data"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "WORKERPERSONNELNUMBER",
+				"type": "String"
+			},
+			{
+				"name": "CONTACTPERSONPARTYNUMBER",
+				"type": "String"
+			},
+			{
+				"name": "RELATIONSHIPTYPE",
+				"type": "String"
+			},
+			{
+				"name": "RELATIONSHIPVALIDFROM",
+				"type": "String"
+			},
+			{
+				"name": "BIRTHDATE",
+				"type": "String"
+			},
+			{
+				"name": "CONTACTFIRSTNAME",
+				"type": "String"
+			},
+			{
+				"name": "CONTACTLASTNAME",
+				"type": "String"
+			},
+			{
+				"name": "CONTACTLASTNAMEPREFIX",
+				"type": "String"
+			},
+			{
+				"name": "CONTACTMIDDLENAME",
+				"type": "String"
+			},
+			{
+				"name": "DEPENDENTCOURTORDEREDEXPIRATIONDATE",
+				"type": "String"
+			},
+			{
+				"name": "DISABLEDVERIFICATIONDATE",
+				"type": "String"
+			},
+			{
+				"name": "EMERGENCYCONTACTPRIMARYSECONDARY",
+				"type": "String"
+			},
+			{
+				"name": "GENDER",
+				"type": "String"
+			},
+			{
+				"name": "ISBENEFICIARY",
+				"type": "String"
+			},
+			{
+				"name": "ISDEPENDENT",
+				"type": "String"
+			},
+			{
+				"name": "ISDEPENDENTCOURTORDERED",
+				"type": "String"
+			},
+			{
+				"name": "ISDEPENDENTDOMESTICPARTNERVERIFIED",
+				"type": "String"
+			},
+			{
+				"name": "ISDISABLED",
+				"type": "String"
+			},
+			{
+				"name": "ISEMERGENCYCONTACT",
+				"type": "String"
+			},
+			{
+				"name": "ISFULLTIMESTUDENT",
+				"type": "String"
+			},
+			{
+				"name": "RELATIONSHIPVALIDTO",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

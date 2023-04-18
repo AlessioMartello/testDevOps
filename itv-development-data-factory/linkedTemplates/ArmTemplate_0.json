@@ -52,7 +52,10 @@
 						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
-							"message": "The fail activity executed",
+							"message": {
+								"value": "@pipeline().parameters.testVar",
+								"type": "Expression"
+							},
 							"errorCode": "404"
 						}
 					}
@@ -60,6 +63,11 @@
 				"policy": {
 					"elapsedTimeMetric": {},
 					"cancelAfter": {}
+				},
+				"parameters": {
+					"testVar": {
+						"type": "string"
+					}
 				},
 				"annotations": []
 			},

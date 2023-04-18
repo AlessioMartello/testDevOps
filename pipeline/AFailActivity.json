@@ -13,6 +13,11 @@
 				}
 			}
 		],
+		"parameters": {
+			"testVar": {
+				"type": "string"
+			}
+		},
 		"annotations": []
 	}
 }

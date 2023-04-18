@@ -10,7 +10,7 @@
 		"AzureSqlDatabase1_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'",
-			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=itvservertutorial04-05-22-16-29-59.database.windows.net;Initial Catalog=trainingdb;User ID=testDevOps;Password=@{linkedService().greatDevVar}"
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=@{linkedService().greatDevVar};Initial Catalog=trainingdb;User ID=testDevOps;Password=@{linkedService().greatDevVar}"
 		},
 		"DataLakeStorageLinkedService_accountKey": {
 			"type": "secureString",
@@ -488,14 +488,25 @@
 					"referenceName": "AzureSqlDatabase1",
 					"type": "LinkedServiceReference",
 					"parameters": {
-						"greatDevVar": "Dev"
+						"greatDevVar": {
+							"value": "@dataset().new",
+							"type": "Expression"
+						}
+					}
+				},
+				"parameters": {
+					"new": {
+						"type": "string"
 					}
 				},
 				"annotations": [],
 				"type": "AzureSqlTable",
 				"schema": [],
 				"typeProperties": {
-					"schema": "ttt",
+					"schema": {
+						"value": "@dataset().new",
+						"type": "Expression"
+					},
 					"table": "tttt"
 				}
 			},

@@ -6,7 +6,7 @@
 			"value": "itv-development-data-factory"
 		},
 		"AzureSqlDatabase1_connectionString": {
-			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=itvservertutorial04-05-22-16-29-59.database.windows.net;Initial Catalog=trainingdb;User ID=testDevOps;Password=@{linkedService().greatDevVar}"
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=@{linkedService().greatDevVar};Initial Catalog=trainingdb;User ID=testDevOps;Password=@{linkedService().greatDevVar}"
 		},
 		"DataLakeStorageLinkedService_accountKey": {
 			"value": ""

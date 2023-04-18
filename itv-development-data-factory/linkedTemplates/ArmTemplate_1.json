@@ -75,14 +75,24 @@
 							{
 								"referenceName": "AzureSqlTable1",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"new": {
+										"value": "@pipeline().globalParameters.testDevGlobalParam",
+										"type": "Expression"
+									}
+								}
 							}
 						],
 						"outputs": [
 							{
 								"referenceName": "AzureSqlTable1",
 								"type": "DatasetReference",
-								"parameters": {}
+								"parameters": {
+									"new": {
+										"value": "@pipeline().globalParameters.testDevGlobalParam",
+										"type": "Expression"
+									}
+								}
 							}
 						]
 					}

@@ -8,7 +8,10 @@
 				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
-					"message": "The fail activity executed",
+					"message": {
+						"value": "@pipeline().parameters.testVar",
+						"type": "Expression"
+					},
 					"errorCode": "404"
 				}
 			}

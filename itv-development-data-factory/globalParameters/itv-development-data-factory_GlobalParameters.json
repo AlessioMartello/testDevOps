@@ -1,1 +1,6 @@
-{}
+{
+	"testDevGlobalParam": {
+		"type": "string",
+		"value": "dev"
+	}
+}

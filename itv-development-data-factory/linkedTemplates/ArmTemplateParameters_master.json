@@ -29,6 +29,9 @@
 		"FileServer1_properties_typeProperties_userId": {
 			"value": "mattycannon"
 		},
+		"default_properties_testDevGlobalParam_value": {
+			"value": "dev"
+		},
 		"containerUri": {
 			"value": ""
 		},

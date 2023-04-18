@@ -7,6 +7,11 @@
 			"metadata": "Data Factory name",
 			"defaultValue": "itv-development-data-factory"
 		},
+		"AzureSqlDatabase1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=itvservertutorial04-05-22-16-29-59.database.windows.net;Initial Catalog=trainingdb;User ID=testDevOps;Password=@{linkedService().greatDevVar}"
+		},
 		"DataLakeStorageLinkedService_accountKey": {
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'DataLakeStorageLinkedService'"
@@ -17,11 +22,8 @@
 		},
 		"sandbox_db_connectionString": {
 			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'sandbox_db'"
-		},
-		"AzureSqlDatabase1_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'"
+			"metadata": "Secure string for 'connectionString' of 'sandbox_db'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=itv-development-server.database.windows.net;Initial Catalog=itv-development-db;User ID=MattA;Password=@{linkedService().hellooooDev}"
 		},
 		"DataLakeStorageLinkedService_properties_typeProperties_url": {
 			"type": "string",
@@ -66,6 +68,9 @@
 					"factoryName": {
 						"value": "[parameters('factoryName')]"
 					},
+					"AzureSqlDatabase1_connectionString": {
+						"value": "[parameters('AzureSqlDatabase1_connectionString')]"
+					},
 					"DataLakeStorageLinkedService_accountKey": {
 						"value": "[parameters('DataLakeStorageLinkedService_accountKey')]"
 					},
@@ -74,9 +79,6 @@
 					},
 					"sandbox_db_connectionString": {
 						"value": "[parameters('sandbox_db_connectionString')]"
-					},
-					"AzureSqlDatabase1_connectionString": {
-						"value": "[parameters('AzureSqlDatabase1_connectionString')]"
 					},
 					"DataLakeStorageLinkedService_properties_typeProperties_url": {
 						"value": "[parameters('DataLakeStorageLinkedService_properties_typeProperties_url')]"

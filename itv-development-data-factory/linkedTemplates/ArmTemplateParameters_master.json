@@ -5,6 +5,9 @@
 		"factoryName": {
 			"value": "itv-development-data-factory"
 		},
+		"AzureSqlDatabase1_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=itvservertutorial04-05-22-16-29-59.database.windows.net;Initial Catalog=trainingdb;User ID=testDevOps;Password=@{linkedService().greatDevVar}"
+		},
 		"DataLakeStorageLinkedService_accountKey": {
 			"value": ""
 		},
@@ -12,10 +15,7 @@
 			"value": ""
 		},
 		"sandbox_db_connectionString": {
-			"value": ""
-		},
-		"AzureSqlDatabase1_connectionString": {
-			"value": ""
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=itv-development-server.database.windows.net;Initial Catalog=itv-development-db;User ID=MattA;Password=@{linkedService().hellooooDev}"
 		},
 		"DataLakeStorageLinkedService_properties_typeProperties_url": {
 			"value": "https://dataflowtest32245.dfs.core.windows.net/"

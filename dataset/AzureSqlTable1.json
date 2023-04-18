@@ -5,14 +5,25 @@
 			"referenceName": "AzureSqlDatabase1",
 			"type": "LinkedServiceReference",
 			"parameters": {
-				"greatDevVar": "Dev"
+				"greatDevVar": {
+					"value": "@dataset().new",
+					"type": "Expression"
+				}
+			}
+		},
+		"parameters": {
+			"new": {
+				"type": "string"
 			}
 		},
 		"annotations": [],
 		"type": "AzureSqlTable",
 		"schema": [],
 		"typeProperties": {
-			"schema": "ttt",
+			"schema": {
+				"value": "@dataset().new",
+				"type": "Expression"
+			},
 			"table": "tttt"
 		}
 	}

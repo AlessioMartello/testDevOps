@@ -1,0 +1,30 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "itv-development-data-factory"
+		},
+		"DataLakeStorageLinkedService_accountKey": {
+			"value": ""
+		},
+		"FileServer1_password": {
+			"value": ""
+		},
+		"sandbox_db_connectionString": {
+			"value": ""
+		},
+		"DataLakeStorageLinkedService_properties_typeProperties_url": {
+			"value": "https://dataflowtest32245.dfs.core.windows.net/"
+		},
+		"Field_api_properties_typeProperties_url": {
+			"value": "https://itventuresandbox.dealcloud.eu/api/rest/v4/schema/entrytypes/ADVWRKSProductCategory_1/fields"
+		},
+		"FileServer1_properties_typeProperties_host": {
+			"value": "C:\\Users\\MatthewCannon\\OneDrive - IT-Venture Ltd\\Documents"
+		},
+		"FileServer1_properties_typeProperties_userId": {
+			"value": "mattycannon"
+		}
+	}
+}

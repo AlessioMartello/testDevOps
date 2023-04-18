@@ -1,0 +1,3436 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "itv-development-data-factory"
+		},
+		"DataLakeStorageLinkedService_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'DataLakeStorageLinkedService'"
+		},
+		"FileServer1_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'FileServer1'"
+		},
+		"sandbox_db_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'sandbox_db'"
+		},
+		"DataLakeStorageLinkedService_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://dataflowtest32245.dfs.core.windows.net/"
+		},
+		"Field_api_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://itventuresandbox.dealcloud.eu/api/rest/v4/schema/entrytypes/ADVWRKSProductCategory_1/fields"
+		},
+		"FileServer1_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "C:\\Users\\MatthewCannon\\OneDrive - IT-Venture Ltd\\Documents"
+		},
+		"FileServer1_properties_typeProperties_userId": {
+			"type": "string",
+			"defaultValue": "mattycannon"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/DataLakeStorageLinkedService')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('DataLakeStorageLinkedService_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('DataLakeStorageLinkedService_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Field_api')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('Field_api_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/FileServer1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "FileServer",
+				"typeProperties": {
+					"host": "[parameters('FileServer1_properties_typeProperties_host')]",
+					"userId": "[parameters('FileServer1_properties_typeProperties_userId')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('FileServer1_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/sandbox_db')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('sandbox_db_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/TestDevOpsPipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 1
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/MA-Dealcloud Pull')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Bearer",
+						"type": "WebActivity",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://itventuresandbox.dealcloud.eu/api/rest/v1/oauth/token",
+							"method": "POST",
+							"headers": {
+								"Authorization": "Basic MTc0Nzc6ejZSVHNYdUx3dkZELU9YeTd4aVg3ZG1lTGVRZmR4bU4zLUJUWE1SQkVCdzE=",
+								"Content-Type": "application/x-www-form-urlencoded"
+							},
+							"body": "scope=data&grant_type=client_credentials"
+						}
+					},
+					{
+						"name": "Get Entries",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Get Bearer",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://itventuresandbox.dealcloud.eu/api/rest/v4/data/entrydata/ConnectCustomer/entries/history",
+							"method": "GET",
+							"headers": {
+								"Authorization": {
+									"value": "@concat('Bearer ', string(activity('Get Bearer').output.access_token))",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Get Fields",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Get Bearer",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://itventuresandbox.dealcloud.eu/api/rest/v4/schema/entrytypes/Fund/fields",
+							"method": "GET",
+							"headers": {
+								"Authorization": {
+									"value": "@concat('Bearer ', string(activity('Get Bearer').output.access_token))",
+									"type": "Expression"
+								}
+							}
+						}
+					},
+					{
+						"name": "Fields import",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Get Fields",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[SPMattA].[FieldIDimport]",
+							"storedProcedureParameters": {
+								"Response": {
+									"value": {
+										"value": "@activity('Get Fields').output.Response",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "sandbox_db",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Entries import",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Get Entries",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[SPMattA].[EntryIDimport]",
+							"storedProcedureParameters": {
+								"Response": {
+									"value": {
+										"value": "@activity('Get Entries').output.Response",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "sandbox_db",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Payload Select",
+						"type": "Script",
+						"dependsOn": [
+							{
+								"activity": "Fields import",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "Entries import",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"linkedServiceName": {
+							"referenceName": "sandbox_db",
+							"type": "LinkedServiceReference"
+						},
+						"typeProperties": {
+							"scripts": [
+								{
+									"type": "Query",
+									"text": "select fieldId, entryId\nfrom MattA.FieldIDs\ncross join MattA.EntryIDs;"
+								}
+							]
+						}
+					},
+					{
+						"name": "Data pull",
+						"type": "WebActivity",
+						"dependsOn": [
+							{
+								"activity": "Payload Select",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"url": "https://itventuresandbox.dealcloud.eu/api/rest/v4/data/entrydata/get?resolveReferenceUrl=true&fillExtendedData=true",
+							"method": "POST",
+							"headers": {
+								"Authorization": {
+									"value": "@concat('Bearer ', string(activity('Get Bearer').output.access_token))",
+									"type": "Expression"
+								}
+							},
+							"body": {
+								"value": "@activity('Payload Select').output.resultSets[0].rows",
+								"type": "Expression"
+							}
+						}
+					},
+					{
+						"name": "Data dump",
+						"type": "SqlServerStoredProcedure",
+						"dependsOn": [
+							{
+								"activity": "Data pull",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:10:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"storedProcedureName": "[[SPMattA].[StagingImport]",
+							"storedProcedureParameters": {
+								"Response": {
+									"value": {
+										"value": "@activity('Data pull').output.Response",
+										"type": "Expression"
+									},
+									"type": "String"
+								}
+							}
+						},
+						"linkedServiceName": {
+							"referenceName": "sandbox_db",
+							"type": "LinkedServiceReference"
+						}
+					},
+					{
+						"name": "Set variable1",
+						"type": "SetVariable",
+						"dependsOn": [
+							{
+								"activity": "Data pull",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "contentLength",
+							"value": {
+								"value": "@activity('Data pull').output.ADFWebActivityResponseHeaders.Content-Length",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"variables": {
+					"contentLength": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2023-03-13T12:01:00Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sandbox_db')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/BenefitPlanEmployeeExcel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataLakeStorageLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Benefits_plan_employee",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Benefits plan employee Demo.xlsx",
+						"fileSystem": "data"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "PERSONNELNUMBER",
+						"type": "String"
+					},
+					{
+						"name": "PLANPERIODID",
+						"type": "String"
+					},
+					{
+						"name": "PLANID",
+						"type": "String"
+					},
+					{
+						"name": "COVERAGEOPTIONID",
+						"type": "String"
+					},
+					{
+						"name": "VALIDFROM",
+						"type": "String"
+					},
+					{
+						"name": "VALIDTO",
+						"type": "String"
+					},
+					{
+						"name": "ADMINISTRATIVESTARTDATETIME",
+						"type": "String"
+					},
+					{
+						"name": "AMOUNTADMIN",
+						"type": "String"
+					},
+					{
+						"name": "AMOUNTEMPLOYEE",
+						"type": "String"
+					},
+					{
+						"name": "AMOUNTEMPLOYER",
+						"type": "String"
+					},
+					{
+						"name": "ANNUALCONTRIBUTION",
+						"type": "String"
+					},
+					{
+						"name": "BUNDLEDID",
+						"type": "String"
+					},
+					{
+						"name": "BUNDLEMASTER",
+						"type": "String"
+					},
+					{
+						"name": "CANCELLATION",
+						"type": "String"
+					},
+					{
+						"name": "CANCELLATIONBY",
+						"type": "String"
+					},
+					{
+						"name": "CANCELLATIONDATETIME",
+						"type": "String"
+					},
+					{
+						"name": "CANCELREASONCODEID",
+						"type": "String"
+					},
+					{
+						"name": "COVERAGEAMOUNT",
+						"type": "String"
+					},
+					{
+						"name": "COVERAGECODE",
+						"type": "String"
+					},
+					{
+						"name": "COVERAGEENDDATETIME",
+						"type": "String"
+					},
+					{
+						"name": "COVERAGESTARTDATETIME",
+						"type": "String"
+					},
+					{
+						"name": "CREDITAPPLIEDVALUE",
+						"type": "String"
+					},
+					{
+						"name": "CREDITHASRATE",
+						"type": "String"
+					},
+					{
+						"name": "CREDITLIFEEVENTOPENALLOCATION",
+						"type": "String"
+					},
+					{
+						"name": "CREDITLIFEEVENTPREVENTADDALLOCATION",
+						"type": "String"
+					},
+					{
+						"name": "CREDITLIFEEVENTPREVENTSUBALLOCATION",
+						"type": "String"
+					},
+					{
+						"name": "DEDUCTIONENDDATETIME",
+						"type": "String"
+					},
+					{
+						"name": "DEDUCTIONSTARTDATETIME",
+						"type": "String"
+					},
+					{
+						"name": "DEFAULTOPTION",
+						"type": "String"
+					},
+					{
+						"name": "ENROLLMENTCONFIRMED",
+						"type": "String"
+					},
+					{
+						"name": "ENROLLMENTCONFIRMEDBY",
+						"type": "String"
+					},
+					{
+						"name": "ENROLLMENTCONFIRMEDDATETIME",
+						"type": "String"
+					},
+					{
+						"name": "ENROLLMENTSTARTDATETIME",
+						"type": "String"
+					},
+					{
+						"name": "ESSCHECKEDOUT",
+						"type": "String"
+					},
+					{
+						"name": "LEGALENTITYID",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENT",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTALLOWCANCELLATION",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTALLOWCANCELLATIONPREV",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTAUTOCANCELPLAN",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTAUTOCANCELPLANPREV",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTAUTOREOPENELIGIBILITY",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTAUTOREOPENELIGIBILITYPREV",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTCHANGECOVERAGE",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTCHANGECOVERAGEPREV",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTCHANGETONEWPLAN",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTCHANGETONEWPLANPREV",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTPREV",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTREPORTINGWINDOW",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTREPORTINGWINDOWPREV",
+						"type": "String"
+					},
+					{
+						"name": "LIFEEVENTTYPES",
+						"type": "String"
+					},
+					{
+						"name": "PAYPERIOD",
+						"type": "String"
+					},
+					{
+						"name": "PERCENTAGE",
+						"type": "String"
+					},
+					{
+						"name": "PERIODEMPLOYEENAME",
+						"type": "String"
+					},
+					{
+						"name": "PLANDESCRIPTION",
+						"type": "String"
+					},
+					{
+						"name": "PLANTYPECODE",
+						"type": "String"
+					},
+					{
+						"name": "PLANTYPEDESIGNEETYPE",
+						"type": "String"
+					},
+					{
+						"name": "PLANTYPEID",
+						"type": "String"
+					},
+					{
+						"name": "PROGRAMID",
+						"type": "String"
+					},
+					{
+						"name": "REASONCODEID",
+						"type": "String"
+					},
+					{
+						"name": "REOPENREASONCODEID",
+						"type": "String"
+					},
+					{
+						"name": "STATUS",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/BenefitsCoverageOptionExcel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataLakeStorageLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Benefits_coverage_option_perso",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Benefits coverage option personal contacts eligbility option Demo.xlsx",
+						"fileSystem": "data"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "COVERAGEOPTIONID",
+						"type": "String"
+					},
+					{
+						"name": "PERSONALCONTACTSELIGIBILITYOPTIONID",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataLakeStorageLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "data - Copy.csv",
+						"folderPath": "am_error_log/input",
+						"fileSystem": "data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Types",
+						"type": "String"
+					},
+					{
+						"name": "TextYearAndQuart",
+						"type": "String"
+					},
+					{
+						"name": "ShortDate",
+						"type": "String"
+					},
+					{
+						"name": "Amount",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText2')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataLakeStorageLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "output.csv",
+						"folderPath": "am_error_log",
+						"fileSystem": "data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/EmploymentV2Excel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataLakeStorageLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Employment_V2",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Employment V2 Demo.xlsx",
+						"fileSystem": "data"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "PERSONNELNUMBER",
+						"type": "String"
+					},
+					{
+						"name": "LEGALENTITYID",
+						"type": "String"
+					},
+					{
+						"name": "EMPLOYMENTID",
+						"type": "String"
+					},
+					{
+						"name": "CALENDARID",
+						"type": "String"
+					},
+					{
+						"name": "DIMENSIONDISPLAYVALUE",
+						"type": "String"
+					},
+					{
+						"name": "EMPLOYMENTENDDATE",
+						"type": "String"
+					},
+					{
+						"name": "EMPLOYMENTSTARTDATE",
+						"type": "String"
+					},
+					{
+						"name": "REGULATORYESTABLISHMENTID",
+						"type": "String"
+					},
+					{
+						"name": "WORKERTYPE",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Field_tableLS')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sandbox_db",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "FieldIDs",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "MattA",
+					"table": "FieldIDs"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sandbox_db')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Fields_rest')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "Field_api",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/Field_api')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/IdentificationExcel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataLakeStorageLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Identification",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Identification Demo.xlsx",
+						"fileSystem": "data"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "PARTYNUMBER",
+						"type": "String"
+					},
+					{
+						"name": "IDENTIFICATIONTYPEID",
+						"type": "String"
+					},
+					{
+						"name": "IDENTIFICATIONNUMBER",
+						"type": "String"
+					},
+					{
+						"name": "DESCRIPTION",
+						"type": "String"
+					},
+					{
+						"name": "ENTRYTYPE",
+						"type": "String"
+					},
+					{
+						"name": "EXPIRATIONDATE",
+						"type": "String"
+					},
+					{
+						"name": "ISPRIMARY",
+						"type": "String"
+					},
+					{
+						"name": "ISSUEDDATE",
+						"type": "String"
+					},
+					{
+						"name": "ISSUINGAGENCYID",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ReportOut')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataLakeStorageLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Report1 Blank.csv",
+						"folderPath": "output",
+						"fileSystem": "data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "Product ",
+						"type": "String"
+					},
+					{
+						"name": "Type Of Cover",
+						"type": "String"
+					},
+					{
+						"name": "National Insurance",
+						"type": "String"
+					},
+					{
+						"name": "Location",
+						"type": "String"
+					},
+					{
+						"name": "Surname",
+						"type": "String"
+					},
+					{
+						"name": "Initial",
+						"type": "String"
+					},
+					{
+						"name": "Forename",
+						"type": "String"
+					},
+					{
+						"name": "Title",
+						"type": "String"
+					},
+					{
+						"name": "DOB",
+						"type": "String"
+					},
+					{
+						"name": "Sex",
+						"type": "String"
+					},
+					{
+						"name": "Building",
+						"type": "String"
+					},
+					{
+						"name": "Street",
+						"type": "String"
+					},
+					{
+						"name": "Sub-Street",
+						"type": "String"
+					},
+					{
+						"name": "City/Town",
+						"type": "String"
+					},
+					{
+						"name": "Post Code",
+						"type": "String"
+					},
+					{
+						"name": "Telephone",
+						"type": "String"
+					},
+					{
+						"name": "Email",
+						"type": "String"
+					},
+					{
+						"name": "S Title17",
+						"type": "String"
+					},
+					{
+						"name": "S Title18",
+						"type": "String"
+					},
+					{
+						"name": "Spouse Surname",
+						"type": "String"
+					},
+					{
+						"name": "S Forename",
+						"type": "String"
+					},
+					{
+						"name": "S DOB",
+						"type": "String"
+					},
+					{
+						"name": "S Sex",
+						"type": "String"
+					},
+					{
+						"name": "Prop_23",
+						"type": "String"
+					},
+					{
+						"name": "Child 1 Title",
+						"type": "String"
+					},
+					{
+						"name": "Child 1 Surname",
+						"type": "String"
+					},
+					{
+						"name": "Child 1 Initial",
+						"type": "String"
+					},
+					{
+						"name": "Child 1 Forename",
+						"type": "String"
+					},
+					{
+						"name": "Child 1 DOB",
+						"type": "String"
+					},
+					{
+						"name": "Child 1 Sex",
+						"type": "String"
+					},
+					{
+						"name": "Prop_30",
+						"type": "String"
+					},
+					{
+						"name": "Child 2 Title",
+						"type": "String"
+					},
+					{
+						"name": "Child 2 Surname",
+						"type": "String"
+					},
+					{
+						"name": "Child 2 Initial",
+						"type": "String"
+					},
+					{
+						"name": "Child 2 Forename",
+						"type": "String"
+					},
+					{
+						"name": "Child 2 DOB",
+						"type": "String"
+					},
+					{
+						"name": "Child 2 Sex",
+						"type": "String"
+					},
+					{
+						"name": "Prop_37",
+						"type": "String"
+					},
+					{
+						"name": "Child 3 Title",
+						"type": "String"
+					},
+					{
+						"name": "Child 3 Surname",
+						"type": "String"
+					},
+					{
+						"name": "Child 3 Initial",
+						"type": "String"
+					},
+					{
+						"name": "Child 3 Forename",
+						"type": "String"
+					},
+					{
+						"name": "Child 3 DOB",
+						"type": "String"
+					},
+					{
+						"name": "Child 3 Sex",
+						"type": "String"
+					},
+					{
+						"name": "Child 4 Title",
+						"type": "String"
+					},
+					{
+						"name": "Child 4 Surname",
+						"type": "String"
+					},
+					{
+						"name": "Child 4 Initial",
+						"type": "String"
+					},
+					{
+						"name": "Child 4 Forename",
+						"type": "String"
+					},
+					{
+						"name": "Child 4 DOB",
+						"type": "String"
+					},
+					{
+						"name": "Child 4 Sex",
+						"type": "String"
+					},
+					{
+						"name": "Child 5 Title",
+						"type": "String"
+					},
+					{
+						"name": "Child 5 Surname",
+						"type": "String"
+					},
+					{
+						"name": "Child 5 Initial",
+						"type": "String"
+					},
+					{
+						"name": "Child 5 Forename",
+						"type": "String"
+					},
+					{
+						"name": "Child 5 DOB",
+						"type": "String"
+					},
+					{
+						"name": "Child 5 Sex",
+						"type": "String"
+					},
+					{
+						"name": "Child 6 Title",
+						"type": "String"
+					},
+					{
+						"name": "Child 6 Surname",
+						"type": "String"
+					},
+					{
+						"name": "Child 6 Initial",
+						"type": "String"
+					},
+					{
+						"name": "Child 6 Forename",
+						"type": "String"
+					},
+					{
+						"name": "Child 6 DOB",
+						"type": "String"
+					},
+					{
+						"name": "Child 6 Sex",
+						"type": "String"
+					},
+					{
+						"name": "Child 7 Title",
+						"type": "String"
+					},
+					{
+						"name": "Child 7 Surname",
+						"type": "String"
+					},
+					{
+						"name": "Child 7 Initial",
+						"type": "String"
+					},
+					{
+						"name": "Child 7 Forename",
+						"type": "String"
+					},
+					{
+						"name": "Child 7 DOB",
+						"type": "String"
+					},
+					{
+						"name": "Child 7 Sex",
+						"type": "String"
+					},
+					{
+						"name": "Child 8 Title",
+						"type": "String"
+					},
+					{
+						"name": "Child 8 Surname",
+						"type": "String"
+					},
+					{
+						"name": "Child 8 Initial",
+						"type": "String"
+					},
+					{
+						"name": "Child 8 Forename",
+						"type": "String"
+					},
+					{
+						"name": "Child 8 DOB",
+						"type": "String"
+					},
+					{
+						"name": "Child 8 Sex",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/WorkerExcel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataLakeStorageLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Worker",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Worker Demo.xlsx",
+						"fileSystem": "data"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "PERSONNELNUMBER",
+						"type": "String"
+					},
+					{
+						"name": "ADDEDFIELDS",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSBOOKS",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSCITY",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSCOUNTRYREGIONID",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSCOUNTRYREGIONISOCODE",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSCOUNTY",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSDISTRICTNAME",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSLOCATIONID",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSNAMEDESCRIPTION",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSPURPOSE",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSSTATE",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSSTREET",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSVALIDFROM",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSVALIDTO",
+						"type": "String"
+					},
+					{
+						"name": "ADDRESSZIPCODE",
+						"type": "String"
+					},
+					{
+						"name": "ALLOWREHIRE",
+						"type": "String"
+					},
+					{
+						"name": "ANNIVERSARYDATETIME",
+						"type": "String"
+					},
+					{
+						"name": "BIRTHDATE",
+						"type": "String"
+					},
+					{
+						"name": "CITIZENSHIPCOUNTRYREGION",
+						"type": "String"
+					},
+					{
+						"name": "DECEASEDDATE",
+						"type": "String"
+					},
+					{
+						"name": "DISABLEDVERIFICATIONDATE",
+						"type": "String"
+					},
+					{
+						"name": "EDUCATION",
+						"type": "String"
+					},
+					{
+						"name": "ELECTRONICLOCATIONID",
+						"type": "String"
+					},
+					{
+						"name": "ETHNICORIGINID",
+						"type": "String"
+					},
+					{
+						"name": "EXPATRIATERULINGVALIDFROM",
+						"type": "String"
+					},
+					{
+						"name": "EXPATRIATERULINGVALIDTO",
+						"type": "String"
+					},
+					{
+						"name": "FATHERBIRTHCOUNTRYREGION",
+						"type": "String"
+					},
+					{
+						"name": "FIRSTNAME",
+						"type": "String"
+					},
+					{
+						"name": "GENDER",
+						"type": "String"
+					},
+					{
+						"name": "IDENTITYEMAIL",
+						"type": "String"
+					},
+					{
+						"name": "IDENTITYPROVIDER",
+						"type": "String"
+					},
+					{
+						"name": "ISDISABLED",
+						"type": "String"
+					},
+					{
+						"name": "ISDISABLEDVETERAN",
+						"type": "String"
+					},
+					{
+						"name": "ISEXPATRIATERULINGAPPLICABLE",
+						"type": "String"
+					},
+					{
+						"name": "ISFULLTIMESTUDENT",
+						"type": "String"
+					},
+					{
+						"name": "KNOWNAS",
+						"type": "String"
+					},
+					{
+						"name": "LANGUAGEID",
+						"type": "String"
+					},
+					{
+						"name": "LASTNAME",
+						"type": "String"
+					},
+					{
+						"name": "LASTNAMEPREFIX",
+						"type": "String"
+					},
+					{
+						"name": "MARITALSTATUS",
+						"type": "String"
+					},
+					{
+						"name": "MIDDLENAME",
+						"type": "String"
+					},
+					{
+						"name": "MILITARYSERVICEENDDATE",
+						"type": "String"
+					},
+					{
+						"name": "MILITARYSERVICESTARTDATE",
+						"type": "String"
+					},
+					{
+						"name": "MOTHERBIRTHCOUNTRYREGION",
+						"type": "String"
+					},
+					{
+						"name": "NAME",
+						"type": "String"
+					},
+					{
+						"name": "NAMEALIAS",
+						"type": "String"
+					},
+					{
+						"name": "NAMESEQUENCEDISPLAYAS",
+						"type": "String"
+					},
+					{
+						"name": "NATIONALITYCOUNTRYREGION",
+						"type": "String"
+					},
+					{
+						"name": "NATIVELANGUAGEID",
+						"type": "String"
+					},
+					{
+						"name": "NUMBEROFDEPENDENTS",
+						"type": "String"
+					},
+					{
+						"name": "OBJECTID",
+						"type": "String"
+					},
+					{
+						"name": "OFFICELOCATION",
+						"type": "String"
+					},
+					{
+						"name": "OFFICELOCATIONID",
+						"type": "String"
+					},
+					{
+						"name": "ORIGINALHIREDATETIME",
+						"type": "String"
+					},
+					{
+						"name": "PARTYNUMBER",
+						"type": "String"
+					},
+					{
+						"name": "PARTYTYPE",
+						"type": "String"
+					},
+					{
+						"name": "PERSONALSUFFIX",
+						"type": "String"
+					},
+					{
+						"name": "PERSONALTITLE",
+						"type": "String"
+					},
+					{
+						"name": "PERSONBIRTHCITY",
+						"type": "String"
+					},
+					{
+						"name": "PERSONBIRTHCOUNTRYREGION",
+						"type": "String"
+					},
+					{
+						"name": "PERSONDETAILSVALIDFROM",
+						"type": "String"
+					},
+					{
+						"name": "PERSONDETAILSVALIDTO",
+						"type": "String"
+					},
+					{
+						"name": "PERSONUSERVALIDFROM",
+						"type": "String"
+					},
+					{
+						"name": "PERSONUSERVALIDTO",
+						"type": "String"
+					},
+					{
+						"name": "PHONETICFIRSTNAME",
+						"type": "String"
+					},
+					{
+						"name": "PHONETICLASTNAME",
+						"type": "String"
+					},
+					{
+						"name": "PHONETICMIDDLENAME",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYADDRESSLOCATION",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTEMAIL",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTEMAILDESCRIPTION",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTEMAILISIM",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTEMAILISPRIVATE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTEMAILPURPOSE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTFACEBOOK",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTFACEBOOKDESCRIPTION",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTFACEBOOKISPRIVATE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTFACEBOOKPURPOSE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTFAX",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTFAXDESCRIPTION",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTFAXEXTENSION",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTFAXISPRIVATE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTFAXPURPOSE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTLINKEDIN",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTLINKEDINDESCRIPTION",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTLINKEDINISPRIVATE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTLINKEDINPURPOSE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTPHONE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTPHONEDESCRIPTION",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTPHONEEXTENSION",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTPHONEISMOBILE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTPHONEISPRIVATE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTPHONEPURPOSE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTTWITTER",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTTWITTERDESCRIPTION",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTTWITTERISPRIVATE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTTWITTERPURPOSE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTURL",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTURLDESCRIPTION",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTURLISPRIVATE",
+						"type": "String"
+					},
+					{
+						"name": "PRIMARYCONTACTURLPURPOSE",
+						"type": "String"
+					},
+					{
+						"name": "PROFESSIONALSUFFIX",
+						"type": "String"
+					},
+					{
+						"name": "PROFESSIONALTITLE",
+						"type": "String"
+					},
+					{
+						"name": "SENIORITYDATE",
+						"type": "String"
+					},
+					{
+						"name": "SUMMARYVALIDFROM",
+						"type": "String"
+					},
+					{
+						"name": "SUMMARYVALIDTO",
+						"type": "String"
+					},
+					{
+						"name": "TITLEID",
+						"type": "String"
+					},
+					{
+						"name": "USER",
+						"type": "String"
+					},
+					{
+						"name": "VETERANSTATUSID",
+						"type": "String"
+					},
+					{
+						"name": "WORKERSTATUS",
+						"type": "String"
+					},
+					{
+						"name": "WORKERTYPE",
+						"type": "String"
+					},
+					{
+						"name": "WORKSFROMHOME",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/WorkerPersonalContactExcel')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "DataLakeStorageLinkedService",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Worker_personal_contact_person",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "Worker personal contact person Demo.xlsx",
+						"fileSystem": "data"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "WORKERPERSONNELNUMBER",
+						"type": "String"
+					},
+					{
+						"name": "CONTACTPERSONPARTYNUMBER",
+						"type": "String"
+					},
+					{
+						"name": "RELATIONSHIPTYPE",
+						"type": "String"
+					},
+					{
+						"name": "RELATIONSHIPVALIDFROM",
+						"type": "String"
+					},
+					{
+						"name": "BIRTHDATE",
+						"type": "String"
+					},
+					{
+						"name": "CONTACTFIRSTNAME",
+						"type": "String"
+					},
+					{
+						"name": "CONTACTLASTNAME",
+						"type": "String"
+					},
+					{
+						"name": "CONTACTLASTNAMEPREFIX",
+						"type": "String"
+					},
+					{
+						"name": "CONTACTMIDDLENAME",
+						"type": "String"
+					},
+					{
+						"name": "DEPENDENTCOURTORDEREDEXPIRATIONDATE",
+						"type": "String"
+					},
+					{
+						"name": "DISABLEDVERIFICATIONDATE",
+						"type": "String"
+					},
+					{
+						"name": "EMERGENCYCONTACTPRIMARYSECONDARY",
+						"type": "String"
+					},
+					{
+						"name": "GENDER",
+						"type": "String"
+					},
+					{
+						"name": "ISBENEFICIARY",
+						"type": "String"
+					},
+					{
+						"name": "ISDEPENDENT",
+						"type": "String"
+					},
+					{
+						"name": "ISDEPENDENTCOURTORDERED",
+						"type": "String"
+					},
+					{
+						"name": "ISDEPENDENTDOMESTICPARTNERVERIFIED",
+						"type": "String"
+					},
+					{
+						"name": "ISDISABLED",
+						"type": "String"
+					},
+					{
+						"name": "ISEMERGENCYCONTACT",
+						"type": "String"
+					},
+					{
+						"name": "ISFULLTIMESTUDENT",
+						"type": "String"
+					},
+					{
+						"name": "RELATIONSHIPVALIDTO",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflowHR_Bupa Dental')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "WorkerExcel",
+								"type": "DatasetReference"
+							},
+							"name": "Worker"
+						},
+						{
+							"dataset": {
+								"referenceName": "BenefitPlanEmployeeExcel",
+								"type": "DatasetReference"
+							},
+							"name": "BenefitPlanEmployee"
+						},
+						{
+							"dataset": {
+								"referenceName": "IdentificationExcel",
+								"type": "DatasetReference"
+							},
+							"name": "Identification"
+						},
+						{
+							"dataset": {
+								"referenceName": "BenefitsCoverageOptionExcel",
+								"type": "DatasetReference"
+							},
+							"name": "BenefitsCoverageOption"
+						},
+						{
+							"dataset": {
+								"referenceName": "WorkerPersonalContactExcel",
+								"type": "DatasetReference"
+							},
+							"name": "WorkerPersonalContact"
+						},
+						{
+							"dataset": {
+								"referenceName": "EmploymentV2Excel",
+								"type": "DatasetReference"
+							},
+							"name": "EmploymentV2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ReportOut",
+								"type": "DatasetReference"
+							},
+							"name": "ReportOut"
+						}
+					],
+					"transformations": [
+						{
+							"name": "BenefitPlanCoverageOption"
+						},
+						{
+							"name": "JoinIdentificationNINO"
+						},
+						{
+							"name": "JoinContacts"
+						},
+						{
+							"name": "PivotContacts",
+							"description": "Pivots a worker's contacts into separate columns."
+						},
+						{
+							"name": "RankWindow"
+						},
+						{
+							"name": "AddRank",
+							"description": "Takes all columns from previous stream and adds a number to the child in a new column based on Relationship type."
+						},
+						{
+							"name": "joinBackOtherFields"
+						},
+						{
+							"name": "joinBenefitsandEligibility"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          PERSONNELNUMBER as string,",
+						"          ADDEDFIELDS as string,",
+						"          ADDRESSBOOKS as string,",
+						"          ADDRESSCITY as string,",
+						"          ADDRESSCOUNTRYREGIONID as string,",
+						"          ADDRESSCOUNTRYREGIONISOCODE as string,",
+						"          ADDRESSCOUNTY as string,",
+						"          ADDRESSDISTRICTNAME as string,",
+						"          ADDRESSLOCATIONID as string,",
+						"          ADDRESSNAMEDESCRIPTION as string,",
+						"          ADDRESSPURPOSE as string,",
+						"          ADDRESSSTATE as string,",
+						"          ADDRESSSTREET as string,",
+						"          ADDRESSVALIDFROM as string,",
+						"          ADDRESSVALIDTO as string,",
+						"          ADDRESSZIPCODE as string,",
+						"          ALLOWREHIRE as string,",
+						"          ANNIVERSARYDATETIME as string,",
+						"          BIRTHDATE as string,",
+						"          CITIZENSHIPCOUNTRYREGION as string,",
+						"          DECEASEDDATE as string,",
+						"          DISABLEDVERIFICATIONDATE as string,",
+						"          EDUCATION as string,",
+						"          ELECTRONICLOCATIONID as string,",
+						"          ETHNICORIGINID as string,",
+						"          EXPATRIATERULINGVALIDFROM as string,",
+						"          EXPATRIATERULINGVALIDTO as string,",
+						"          FATHERBIRTHCOUNTRYREGION as string,",
+						"          FIRSTNAME as string,",
+						"          GENDER as string,",
+						"          IDENTITYEMAIL as string,",
+						"          IDENTITYPROVIDER as string,",
+						"          ISDISABLED as string,",
+						"          ISDISABLEDVETERAN as string,",
+						"          ISEXPATRIATERULINGAPPLICABLE as string,",
+						"          ISFULLTIMESTUDENT as string,",
+						"          KNOWNAS as string,",
+						"          LANGUAGEID as string,",
+						"          LASTNAME as string,",
+						"          LASTNAMEPREFIX as string,",
+						"          MARITALSTATUS as string,",
+						"          MIDDLENAME as string,",
+						"          MILITARYSERVICEENDDATE as string,",
+						"          MILITARYSERVICESTARTDATE as string,",
+						"          MOTHERBIRTHCOUNTRYREGION as string,",
+						"          NAME as string,",
+						"          NAMEALIAS as string,",
+						"          NAMESEQUENCEDISPLAYAS as string,",
+						"          NATIONALITYCOUNTRYREGION as string,",
+						"          NATIVELANGUAGEID as string,",
+						"          NUMBEROFDEPENDENTS as string,",
+						"          OBJECTID as string,",
+						"          OFFICELOCATION as string,",
+						"          OFFICELOCATIONID as string,",
+						"          ORIGINALHIREDATETIME as string,",
+						"          PARTYNUMBER as string,",
+						"          PARTYTYPE as string,",
+						"          PERSONALSUFFIX as string,",
+						"          PERSONALTITLE as string,",
+						"          PERSONBIRTHCITY as string,",
+						"          PERSONBIRTHCOUNTRYREGION as string,",
+						"          PERSONDETAILSVALIDFROM as string,",
+						"          PERSONDETAILSVALIDTO as string,",
+						"          PERSONUSERVALIDFROM as string,",
+						"          PERSONUSERVALIDTO as string,",
+						"          PHONETICFIRSTNAME as string,",
+						"          PHONETICLASTNAME as string,",
+						"          PHONETICMIDDLENAME as string,",
+						"          PRIMARYADDRESSLOCATION as string,",
+						"          PRIMARYCONTACTEMAIL as string,",
+						"          PRIMARYCONTACTEMAILDESCRIPTION as string,",
+						"          PRIMARYCONTACTEMAILISIM as string,",
+						"          PRIMARYCONTACTEMAILISPRIVATE as string,",
+						"          PRIMARYCONTACTEMAILPURPOSE as string,",
+						"          PRIMARYCONTACTFACEBOOK as string,",
+						"          PRIMARYCONTACTFACEBOOKDESCRIPTION as string,",
+						"          PRIMARYCONTACTFACEBOOKISPRIVATE as string,",
+						"          PRIMARYCONTACTFACEBOOKPURPOSE as string,",
+						"          PRIMARYCONTACTFAX as string,",
+						"          PRIMARYCONTACTFAXDESCRIPTION as string,",
+						"          PRIMARYCONTACTFAXEXTENSION as string,",
+						"          PRIMARYCONTACTFAXISPRIVATE as string,",
+						"          PRIMARYCONTACTFAXPURPOSE as string,",
+						"          PRIMARYCONTACTLINKEDIN as string,",
+						"          PRIMARYCONTACTLINKEDINDESCRIPTION as string,",
+						"          PRIMARYCONTACTLINKEDINISPRIVATE as string,",
+						"          PRIMARYCONTACTLINKEDINPURPOSE as string,",
+						"          PRIMARYCONTACTPHONE as string,",
+						"          PRIMARYCONTACTPHONEDESCRIPTION as string,",
+						"          PRIMARYCONTACTPHONEEXTENSION as string,",
+						"          PRIMARYCONTACTPHONEISMOBILE as string,",
+						"          PRIMARYCONTACTPHONEISPRIVATE as string,",
+						"          PRIMARYCONTACTPHONEPURPOSE as string,",
+						"          PRIMARYCONTACTTWITTER as string,",
+						"          PRIMARYCONTACTTWITTERDESCRIPTION as string,",
+						"          PRIMARYCONTACTTWITTERISPRIVATE as string,",
+						"          PRIMARYCONTACTTWITTERPURPOSE as string,",
+						"          PRIMARYCONTACTURL as string,",
+						"          PRIMARYCONTACTURLDESCRIPTION as string,",
+						"          PRIMARYCONTACTURLISPRIVATE as string,",
+						"          PRIMARYCONTACTURLPURPOSE as string,",
+						"          PROFESSIONALSUFFIX as string,",
+						"          PROFESSIONALTITLE as string,",
+						"          SENIORITYDATE as string,",
+						"          SUMMARYVALIDFROM as string,",
+						"          SUMMARYVALIDTO as string,",
+						"          TITLEID as string,",
+						"          USER as string,",
+						"          VETERANSTATUSID as string,",
+						"          WORKERSTATUS as string,",
+						"          WORKERTYPE as string,",
+						"          WORKSFROMHOME as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Worker",
+						"source(output(",
+						"          PERSONNELNUMBER as string,",
+						"          PLANPERIODID as string,",
+						"          PLANID as string,",
+						"          COVERAGEOPTIONID as string,",
+						"          VALIDFROM as string,",
+						"          VALIDTO as string,",
+						"          ADMINISTRATIVESTARTDATETIME as string,",
+						"          AMOUNTADMIN as string,",
+						"          AMOUNTEMPLOYEE as string,",
+						"          AMOUNTEMPLOYER as string,",
+						"          ANNUALCONTRIBUTION as string,",
+						"          BUNDLEDID as string,",
+						"          BUNDLEMASTER as string,",
+						"          CANCELLATION as string,",
+						"          CANCELLATIONBY as string,",
+						"          CANCELLATIONDATETIME as string,",
+						"          CANCELREASONCODEID as string,",
+						"          COVERAGEAMOUNT as string,",
+						"          COVERAGECODE as string,",
+						"          COVERAGEENDDATETIME as string,",
+						"          COVERAGESTARTDATETIME as string,",
+						"          CREDITAPPLIEDVALUE as string,",
+						"          CREDITHASRATE as string,",
+						"          CREDITLIFEEVENTOPENALLOCATION as string,",
+						"          CREDITLIFEEVENTPREVENTADDALLOCATION as string,",
+						"          CREDITLIFEEVENTPREVENTSUBALLOCATION as string,",
+						"          DEDUCTIONENDDATETIME as string,",
+						"          DEDUCTIONSTARTDATETIME as string,",
+						"          DEFAULTOPTION as string,",
+						"          ENROLLMENTCONFIRMED as string,",
+						"          ENROLLMENTCONFIRMEDBY as string,",
+						"          ENROLLMENTCONFIRMEDDATETIME as string,",
+						"          ENROLLMENTSTARTDATETIME as string,",
+						"          ESSCHECKEDOUT as string,",
+						"          LEGALENTITYID as string,",
+						"          LIFEEVENT as string,",
+						"          LIFEEVENTALLOWCANCELLATION as string,",
+						"          LIFEEVENTALLOWCANCELLATIONPREV as string,",
+						"          LIFEEVENTAUTOCANCELPLAN as string,",
+						"          LIFEEVENTAUTOCANCELPLANPREV as string,",
+						"          LIFEEVENTAUTOREOPENELIGIBILITY as string,",
+						"          LIFEEVENTAUTOREOPENELIGIBILITYPREV as string,",
+						"          LIFEEVENTCHANGECOVERAGE as string,",
+						"          LIFEEVENTCHANGECOVERAGEPREV as string,",
+						"          LIFEEVENTCHANGETONEWPLAN as string,",
+						"          LIFEEVENTCHANGETONEWPLANPREV as string,",
+						"          LIFEEVENTPREV as string,",
+						"          LIFEEVENTREPORTINGWINDOW as string,",
+						"          LIFEEVENTREPORTINGWINDOWPREV as string,",
+						"          LIFEEVENTTYPES as string,",
+						"          PAYPERIOD as string,",
+						"          PERCENTAGE as string,",
+						"          PERIODEMPLOYEENAME as string,",
+						"          PLANDESCRIPTION as string,",
+						"          PLANTYPECODE as string,",
+						"          PLANTYPEDESIGNEETYPE as string,",
+						"          PLANTYPEID as string,",
+						"          PROGRAMID as string,",
+						"          REASONCODEID as string,",
+						"          REOPENREASONCODEID as string,",
+						"          STATUS as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> BenefitPlanEmployee",
+						"source(output(",
+						"          PARTYNUMBER as string,",
+						"          IDENTIFICATIONTYPEID as string,",
+						"          IDENTIFICATIONNUMBER as string,",
+						"          DESCRIPTION as string,",
+						"          ENTRYTYPE as string,",
+						"          EXPIRATIONDATE as string,",
+						"          ISPRIMARY as string,",
+						"          ISSUEDDATE as string,",
+						"          ISSUINGAGENCYID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Identification",
+						"source(output(",
+						"          COVERAGEOPTIONID as string,",
+						"          PERSONALCONTACTSELIGIBILITYOPTIONID as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> BenefitsCoverageOption",
+						"source(output(",
+						"          WORKERPERSONNELNUMBER as string,",
+						"          CONTACTPERSONPARTYNUMBER as string,",
+						"          RELATIONSHIPTYPE as string,",
+						"          RELATIONSHIPVALIDFROM as string,",
+						"          BIRTHDATE as string,",
+						"          CONTACTFIRSTNAME as string,",
+						"          CONTACTLASTNAME as string,",
+						"          CONTACTLASTNAMEPREFIX as string,",
+						"          CONTACTMIDDLENAME as string,",
+						"          DEPENDENTCOURTORDEREDEXPIRATIONDATE as string,",
+						"          DISABLEDVERIFICATIONDATE as string,",
+						"          EMERGENCYCONTACTPRIMARYSECONDARY as string,",
+						"          GENDER as string,",
+						"          ISBENEFICIARY as string,",
+						"          ISDEPENDENT as string,",
+						"          ISDEPENDENTCOURTORDERED as string,",
+						"          ISDEPENDENTDOMESTICPARTNERVERIFIED as string,",
+						"          ISDISABLED as string,",
+						"          ISEMERGENCYCONTACT as string,",
+						"          ISFULLTIMESTUDENT as string,",
+						"          RELATIONSHIPVALIDTO as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> WorkerPersonalContact",
+						"source(output(",
+						"          PERSONNELNUMBER as string,",
+						"          LEGALENTITYID as string,",
+						"          EMPLOYMENTID as string,",
+						"          CALENDARID as string,",
+						"          DIMENSIONDISPLAYVALUE as string,",
+						"          EMPLOYMENTENDDATE as string,",
+						"          EMPLOYMENTSTARTDATE as string,",
+						"          REGULATORYESTABLISHMENTID as string,",
+						"          WORKERTYPE as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> EmploymentV2",
+						"BenefitPlanEmployee, BenefitsCoverageOption join(BenefitPlanEmployee@COVERAGEOPTIONID == BenefitsCoverageOption@COVERAGEOPTIONID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> BenefitPlanCoverageOption",
+						"Worker, Identification join(Worker@PARTYNUMBER == Identification@PARTYNUMBER",
+						"     && \"NINO\" == IDENTIFICATIONTYPEID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'right')~> JoinIdentificationNINO",
+						"JoinIdentificationNINO, WorkerPersonalContact join(PERSONNELNUMBER == WORKERPERSONNELNUMBER,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinContacts",
+						"joinBenefitsandEligibility pivot(groupBy(Worker@PERSONNELNUMBER,",
+						"          VALIDFROM,",
+						"          VALIDTO),",
+						"     pivotBy(NumberedChildRelType, ['Spouse', 'Child 1', 'Child 2', 'Child 3', 'Child 4', 'Child 5', 'Child 6', 'Child 7', 'Child 8', null]),",
+						"     { Last Name} = first(CONTACTLASTNAME),",
+						"          { First Name} = first(CONTACTFIRSTNAME),",
+						"          { Birth Date} = first(WorkerPersonalContact@BIRTHDATE),",
+						"          { Sex} = first(WorkerPersonalContact@GENDER),",
+						"     columnNaming: '$V$N',",
+						"     lateral: false) ~> PivotContacts",
+						"JoinContacts window(over(PERSONNELNUMBER),",
+						"     asc(CONTACTPERSONPARTYNUMBER, true),",
+						"     RankCol = rank()) ~> RankWindow",
+						"RankWindow derive(NumberedChildRelType = iif(equals(RELATIONSHIPTYPE,\"Child\"), concat(RELATIONSHIPTYPE, \" \", toString(RankCol)), RELATIONSHIPTYPE)) ~> AddRank",
+						"PivotContacts, joinBenefitsandEligibility join(PivotContacts@PERSONNELNUMBER == Worker@PERSONNELNUMBER",
+						"     && PivotContacts@VALIDFROM == BenefitPlanEmployee@VALIDFROM",
+						"     && PivotContacts@VALIDTO == BenefitPlanEmployee@VALIDTO,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinBackOtherFields",
+						"AddRank, BenefitPlanCoverageOption join(Worker@PERSONNELNUMBER == BenefitPlanEmployee@PERSONNELNUMBER",
+						"     && RELATIONSHIPTYPE == PERSONALCONTACTSELIGIBILITYOPTIONID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinBenefitsandEligibility",
+						"joinBackOtherFields sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          {Product } as string,",
+						"          {Type Of Cover} as string,",
+						"          {National Insurance} as string,",
+						"          Location as string,",
+						"          Surname as string,",
+						"          Initial as string,",
+						"          Forename as string,",
+						"          Title as string,",
+						"          DOB as string,",
+						"          Sex as string,",
+						"          Building as string,",
+						"          Street as string,",
+						"          {Sub-Street} as string,",
+						"          {City/Town} as string,",
+						"          {Post Code} as string,",
+						"          Telephone as string,",
+						"          Email as string,",
+						"          {S Title17} as string,",
+						"          {S Title18} as string,",
+						"          {Spouse Surname} as string,",
+						"          {S Forename} as string,",
+						"          {S DOB} as string,",
+						"          {S Sex} as string,",
+						"          Prop_23 as string,",
+						"          {Child 1 Title} as string,",
+						"          {Child 1 Surname} as string,",
+						"          {Child 1 Initial} as string,",
+						"          {Child 1 Forename} as string,",
+						"          {Child 1 DOB} as string,",
+						"          {Child 1 Sex} as string,",
+						"          Prop_30 as string,",
+						"          {Child 2 Title} as string,",
+						"          {Child 2 Surname} as string,",
+						"          {Child 2 Initial} as string,",
+						"          {Child 2 Forename} as string,",
+						"          {Child 2 DOB} as string,",
+						"          {Child 2 Sex} as string,",
+						"          Prop_37 as string,",
+						"          {Child 3 Title} as string,",
+						"          {Child 3 Surname} as string,",
+						"          {Child 3 Initial} as string,",
+						"          {Child 3 Forename} as string,",
+						"          {Child 3 DOB} as string,",
+						"          {Child 3 Sex} as string,",
+						"          {Child 4 Title} as string,",
+						"          {Child 4 Surname} as string,",
+						"          {Child 4 Initial} as string,",
+						"          {Child 4 Forename} as string,",
+						"          {Child 4 DOB} as string,",
+						"          {Child 4 Sex} as string,",
+						"          {Child 5 Title} as string,",
+						"          {Child 5 Surname} as string,",
+						"          {Child 5 Initial} as string,",
+						"          {Child 5 Forename} as string,",
+						"          {Child 5 DOB} as string,",
+						"          {Child 5 Sex} as string,",
+						"          {Child 6 Title} as string,",
+						"          {Child 6 Surname} as string,",
+						"          {Child 6 Initial} as string,",
+						"          {Child 6 Forename} as string,",
+						"          {Child 6 DOB} as string,",
+						"          {Child 6 Sex} as string,",
+						"          {Child 7 Title} as string,",
+						"          {Child 7 Surname} as string,",
+						"          {Child 7 Initial} as string,",
+						"          {Child 7 Forename} as string,",
+						"          {Child 7 DOB} as string,",
+						"          {Child 7 Sex} as string,",
+						"          {Child 8 Title} as string,",
+						"          {Child 8 Surname} as string,",
+						"          {Child 8 Initial} as string,",
+						"          {Child 8 Forename} as string,",
+						"          {Child 8 DOB} as string,",
+						"          {Child 8 Sex} as string",
+						"     ),",
+						"     partitionFileNames:['BupaDental.csv'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          {Type Of Cover} = PLANID,",
+						"          {National Insurance} = IDENTIFICATIONNUMBER,",
+						"          Location = ADDRESSLOCATIONID,",
+						"          Surname = LASTNAME,",
+						"          Initial = MIDDLENAME,",
+						"          Forename = FIRSTNAME,",
+						"          Title = PERSONALTITLE,",
+						"          DOB = Worker@BIRTHDATE,",
+						"          Sex = Worker@GENDER,",
+						"          Street = ADDRESSSTREET,",
+						"          {City/Town} = ADDRESSCITY,",
+						"          {Post Code} = ADDRESSZIPCODE,",
+						"          Telephone = PRIMARYCONTACTPHONE,",
+						"          Email = IDENTITYEMAIL,",
+						"          {Spouse Surname} = {Spouse Last Name},",
+						"          {S Forename} = {Spouse First Name},",
+						"          {S DOB} = {Spouse Birth Date},",
+						"          {S Sex} = {Spouse Sex},",
+						"          {Child 1 Surname} = {Child 1 Last Name},",
+						"          {Child 1 Forename} = {Child 1 First Name},",
+						"          {Child 1 DOB} = {Child 1 Birth Date},",
+						"          {Child 1 Sex},",
+						"          {Child 2 Surname} = {Child 2 Last Name},",
+						"          {Child 2 Forename} = {Child 2 First Name},",
+						"          {Child 2 DOB} = {Child 2 Birth Date},",
+						"          {Child 2 Sex},",
+						"          {Child 3 Surname} = {Child 3 Last Name},",
+						"          {Child 3 Forename} = {Child 3 First Name},",
+						"          {Child 3 DOB} = {Child 3 Birth Date},",
+						"          {Child 3 Sex},",
+						"          {Child 4 Sex},",
+						"          {Child 5 Sex},",
+						"          {Child 6 Sex},",
+						"          {Child 7 Sex},",
+						"          {Child 8 Sex}",
+						"     ),",
+						"     partitionBy('hash', 1)) ~> ReportOut"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/WorkerExcel')]",
+				"[concat(variables('factoryId'), '/datasets/BenefitPlanEmployeeExcel')]",
+				"[concat(variables('factoryId'), '/datasets/IdentificationExcel')]",
+				"[concat(variables('factoryId'), '/datasets/BenefitsCoverageOptionExcel')]",
+				"[concat(variables('factoryId'), '/datasets/WorkerPersonalContactExcel')]",
+				"[concat(variables('factoryId'), '/datasets/EmploymentV2Excel')]",
+				"[concat(variables('factoryId'), '/datasets/ReportOut')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflowHR_Bupa Medical')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "WorkerExcel",
+								"type": "DatasetReference"
+							},
+							"name": "Worker"
+						},
+						{
+							"dataset": {
+								"referenceName": "BenefitPlanEmployeeExcel",
+								"type": "DatasetReference"
+							},
+							"name": "BenefitPlanEmployee"
+						},
+						{
+							"dataset": {
+								"referenceName": "IdentificationExcel",
+								"type": "DatasetReference"
+							},
+							"name": "Identification"
+						},
+						{
+							"dataset": {
+								"referenceName": "BenefitsCoverageOptionExcel",
+								"type": "DatasetReference"
+							},
+							"name": "BenefitsCoverageOption"
+						},
+						{
+							"dataset": {
+								"referenceName": "WorkerPersonalContactExcel",
+								"type": "DatasetReference"
+							},
+							"name": "WorkerPersonalContact"
+						},
+						{
+							"dataset": {
+								"referenceName": "EmploymentV2Excel",
+								"type": "DatasetReference"
+							},
+							"name": "EmploymentV2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ReportOut",
+								"type": "DatasetReference"
+							},
+							"name": "ReportOut"
+						}
+					],
+					"transformations": [
+						{
+							"name": "BenefitPlanCoverageOption"
+						},
+						{
+							"name": "JoinIdentificationNINO"
+						},
+						{
+							"name": "JoinContacts"
+						},
+						{
+							"name": "PivotContacts",
+							"description": "Pivots a worker's contacts into separate columns."
+						},
+						{
+							"name": "RankWindow"
+						},
+						{
+							"name": "AddRank",
+							"description": "Takes all columns from previous stream and adds a number to the child in a new column based on Relationship type."
+						},
+						{
+							"name": "joinBackOtherFields"
+						},
+						{
+							"name": "joinBenefitsandEligibility"
+						},
+						{
+							"name": "derivedColumn1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          PERSONNELNUMBER as string,",
+						"          ADDEDFIELDS as string,",
+						"          ADDRESSBOOKS as string,",
+						"          ADDRESSCITY as string,",
+						"          ADDRESSCOUNTRYREGIONID as string,",
+						"          ADDRESSCOUNTRYREGIONISOCODE as string,",
+						"          ADDRESSCOUNTY as string,",
+						"          ADDRESSDISTRICTNAME as string,",
+						"          ADDRESSLOCATIONID as string,",
+						"          ADDRESSNAMEDESCRIPTION as string,",
+						"          ADDRESSPURPOSE as string,",
+						"          ADDRESSSTATE as string,",
+						"          ADDRESSSTREET as string,",
+						"          ADDRESSVALIDFROM as string,",
+						"          ADDRESSVALIDTO as string,",
+						"          ADDRESSZIPCODE as string,",
+						"          ALLOWREHIRE as string,",
+						"          ANNIVERSARYDATETIME as string,",
+						"          BIRTHDATE as string,",
+						"          CITIZENSHIPCOUNTRYREGION as string,",
+						"          DECEASEDDATE as string,",
+						"          DISABLEDVERIFICATIONDATE as string,",
+						"          EDUCATION as string,",
+						"          ELECTRONICLOCATIONID as string,",
+						"          ETHNICORIGINID as string,",
+						"          EXPATRIATERULINGVALIDFROM as string,",
+						"          EXPATRIATERULINGVALIDTO as string,",
+						"          FATHERBIRTHCOUNTRYREGION as string,",
+						"          FIRSTNAME as string,",
+						"          GENDER as string,",
+						"          IDENTITYEMAIL as string,",
+						"          IDENTITYPROVIDER as string,",
+						"          ISDISABLED as string,",
+						"          ISDISABLEDVETERAN as string,",
+						"          ISEXPATRIATERULINGAPPLICABLE as string,",
+						"          ISFULLTIMESTUDENT as string,",
+						"          KNOWNAS as string,",
+						"          LANGUAGEID as string,",
+						"          LASTNAME as string,",
+						"          LASTNAMEPREFIX as string,",
+						"          MARITALSTATUS as string,",
+						"          MIDDLENAME as string,",
+						"          MILITARYSERVICEENDDATE as string,",
+						"          MILITARYSERVICESTARTDATE as string,",
+						"          MOTHERBIRTHCOUNTRYREGION as string,",
+						"          NAME as string,",
+						"          NAMEALIAS as string,",
+						"          NAMESEQUENCEDISPLAYAS as string,",
+						"          NATIONALITYCOUNTRYREGION as string,",
+						"          NATIVELANGUAGEID as string,",
+						"          NUMBEROFDEPENDENTS as string,",
+						"          OBJECTID as string,",
+						"          OFFICELOCATION as string,",
+						"          OFFICELOCATIONID as string,",
+						"          ORIGINALHIREDATETIME as string,",
+						"          PARTYNUMBER as string,",
+						"          PARTYTYPE as string,",
+						"          PERSONALSUFFIX as string,",
+						"          PERSONALTITLE as string,",
+						"          PERSONBIRTHCITY as string,",
+						"          PERSONBIRTHCOUNTRYREGION as string,",
+						"          PERSONDETAILSVALIDFROM as string,",
+						"          PERSONDETAILSVALIDTO as string,",
+						"          PERSONUSERVALIDFROM as string,",
+						"          PERSONUSERVALIDTO as string,",
+						"          PHONETICFIRSTNAME as string,",
+						"          PHONETICLASTNAME as string,",
+						"          PHONETICMIDDLENAME as string,",
+						"          PRIMARYADDRESSLOCATION as string,",
+						"          PRIMARYCONTACTEMAIL as string,",
+						"          PRIMARYCONTACTEMAILDESCRIPTION as string,",
+						"          PRIMARYCONTACTEMAILISIM as string,",
+						"          PRIMARYCONTACTEMAILISPRIVATE as string,",
+						"          PRIMARYCONTACTEMAILPURPOSE as string,",
+						"          PRIMARYCONTACTFACEBOOK as string,",
+						"          PRIMARYCONTACTFACEBOOKDESCRIPTION as string,",
+						"          PRIMARYCONTACTFACEBOOKISPRIVATE as string,",
+						"          PRIMARYCONTACTFACEBOOKPURPOSE as string,",
+						"          PRIMARYCONTACTFAX as string,",
+						"          PRIMARYCONTACTFAXDESCRIPTION as string,",
+						"          PRIMARYCONTACTFAXEXTENSION as string,",
+						"          PRIMARYCONTACTFAXISPRIVATE as string,",
+						"          PRIMARYCONTACTFAXPURPOSE as string,",
+						"          PRIMARYCONTACTLINKEDIN as string,",
+						"          PRIMARYCONTACTLINKEDINDESCRIPTION as string,",
+						"          PRIMARYCONTACTLINKEDINISPRIVATE as string,",
+						"          PRIMARYCONTACTLINKEDINPURPOSE as string,",
+						"          PRIMARYCONTACTPHONE as string,",
+						"          PRIMARYCONTACTPHONEDESCRIPTION as string,",
+						"          PRIMARYCONTACTPHONEEXTENSION as string,",
+						"          PRIMARYCONTACTPHONEISMOBILE as string,",
+						"          PRIMARYCONTACTPHONEISPRIVATE as string,",
+						"          PRIMARYCONTACTPHONEPURPOSE as string,",
+						"          PRIMARYCONTACTTWITTER as string,",
+						"          PRIMARYCONTACTTWITTERDESCRIPTION as string,",
+						"          PRIMARYCONTACTTWITTERISPRIVATE as string,",
+						"          PRIMARYCONTACTTWITTERPURPOSE as string,",
+						"          PRIMARYCONTACTURL as string,",
+						"          PRIMARYCONTACTURLDESCRIPTION as string,",
+						"          PRIMARYCONTACTURLISPRIVATE as string,",
+						"          PRIMARYCONTACTURLPURPOSE as string,",
+						"          PROFESSIONALSUFFIX as string,",
+						"          PROFESSIONALTITLE as string,",
+						"          SENIORITYDATE as string,",
+						"          SUMMARYVALIDFROM as string,",
+						"          SUMMARYVALIDTO as string,",
+						"          TITLEID as string,",
+						"          USER as string,",
+						"          VETERANSTATUSID as string,",
+						"          WORKERSTATUS as string,",
+						"          WORKERTYPE as string,",
+						"          WORKSFROMHOME as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Worker",
+						"source(output(",
+						"          PERSONNELNUMBER as string,",
+						"          PLANPERIODID as string,",
+						"          PLANID as string,",
+						"          COVERAGEOPTIONID as string,",
+						"          VALIDFROM as string,",
+						"          VALIDTO as string,",
+						"          ADMINISTRATIVESTARTDATETIME as string,",
+						"          AMOUNTADMIN as string,",
+						"          AMOUNTEMPLOYEE as string,",
+						"          AMOUNTEMPLOYER as string,",
+						"          ANNUALCONTRIBUTION as string,",
+						"          BUNDLEDID as string,",
+						"          BUNDLEMASTER as string,",
+						"          CANCELLATION as string,",
+						"          CANCELLATIONBY as string,",
+						"          CANCELLATIONDATETIME as string,",
+						"          CANCELREASONCODEID as string,",
+						"          COVERAGEAMOUNT as string,",
+						"          COVERAGECODE as string,",
+						"          COVERAGEENDDATETIME as string,",
+						"          COVERAGESTARTDATETIME as string,",
+						"          CREDITAPPLIEDVALUE as string,",
+						"          CREDITHASRATE as string,",
+						"          CREDITLIFEEVENTOPENALLOCATION as string,",
+						"          CREDITLIFEEVENTPREVENTADDALLOCATION as string,",
+						"          CREDITLIFEEVENTPREVENTSUBALLOCATION as string,",
+						"          DEDUCTIONENDDATETIME as string,",
+						"          DEDUCTIONSTARTDATETIME as string,",
+						"          DEFAULTOPTION as string,",
+						"          ENROLLMENTCONFIRMED as string,",
+						"          ENROLLMENTCONFIRMEDBY as string,",
+						"          ENROLLMENTCONFIRMEDDATETIME as string,",
+						"          ENROLLMENTSTARTDATETIME as string,",
+						"          ESSCHECKEDOUT as string,",
+						"          LEGALENTITYID as string,",
+						"          LIFEEVENT as string,",
+						"          LIFEEVENTALLOWCANCELLATION as string,",
+						"          LIFEEVENTALLOWCANCELLATIONPREV as string,",
+						"          LIFEEVENTAUTOCANCELPLAN as string,",
+						"          LIFEEVENTAUTOCANCELPLANPREV as string,",
+						"          LIFEEVENTAUTOREOPENELIGIBILITY as string,",
+						"          LIFEEVENTAUTOREOPENELIGIBILITYPREV as string,",
+						"          LIFEEVENTCHANGECOVERAGE as string,",
+						"          LIFEEVENTCHANGECOVERAGEPREV as string,",
+						"          LIFEEVENTCHANGETONEWPLAN as string,",
+						"          LIFEEVENTCHANGETONEWPLANPREV as string,",
+						"          LIFEEVENTPREV as string,",
+						"          LIFEEVENTREPORTINGWINDOW as string,",
+						"          LIFEEVENTREPORTINGWINDOWPREV as string,",
+						"          LIFEEVENTTYPES as string,",
+						"          PAYPERIOD as string,",
+						"          PERCENTAGE as string,",
+						"          PERIODEMPLOYEENAME as string,",
+						"          PLANDESCRIPTION as string,",
+						"          PLANTYPECODE as string,",
+						"          PLANTYPEDESIGNEETYPE as string,",
+						"          PLANTYPEID as string,",
+						"          PROGRAMID as string,",
+						"          REASONCODEID as string,",
+						"          REOPENREASONCODEID as string,",
+						"          STATUS as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> BenefitPlanEmployee",
+						"source(output(",
+						"          PARTYNUMBER as string,",
+						"          IDENTIFICATIONTYPEID as string,",
+						"          IDENTIFICATIONNUMBER as string,",
+						"          DESCRIPTION as string,",
+						"          ENTRYTYPE as string,",
+						"          EXPIRATIONDATE as string,",
+						"          ISPRIMARY as string,",
+						"          ISSUEDDATE as string,",
+						"          ISSUINGAGENCYID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Identification",
+						"source(output(",
+						"          COVERAGEOPTIONID as string,",
+						"          PERSONALCONTACTSELIGIBILITYOPTIONID as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> BenefitsCoverageOption",
+						"source(output(",
+						"          WORKERPERSONNELNUMBER as string,",
+						"          CONTACTPERSONPARTYNUMBER as string,",
+						"          RELATIONSHIPTYPE as string,",
+						"          RELATIONSHIPVALIDFROM as string,",
+						"          BIRTHDATE as string,",
+						"          CONTACTFIRSTNAME as string,",
+						"          CONTACTLASTNAME as string,",
+						"          CONTACTLASTNAMEPREFIX as string,",
+						"          CONTACTMIDDLENAME as string,",
+						"          DEPENDENTCOURTORDEREDEXPIRATIONDATE as string,",
+						"          DISABLEDVERIFICATIONDATE as string,",
+						"          EMERGENCYCONTACTPRIMARYSECONDARY as string,",
+						"          GENDER as string,",
+						"          ISBENEFICIARY as string,",
+						"          ISDEPENDENT as string,",
+						"          ISDEPENDENTCOURTORDERED as string,",
+						"          ISDEPENDENTDOMESTICPARTNERVERIFIED as string,",
+						"          ISDISABLED as string,",
+						"          ISEMERGENCYCONTACT as string,",
+						"          ISFULLTIMESTUDENT as string,",
+						"          RELATIONSHIPVALIDTO as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> WorkerPersonalContact",
+						"source(output(",
+						"          PERSONNELNUMBER as string,",
+						"          LEGALENTITYID as string,",
+						"          EMPLOYMENTID as string,",
+						"          CALENDARID as string,",
+						"          DIMENSIONDISPLAYVALUE as string,",
+						"          EMPLOYMENTENDDATE as string,",
+						"          EMPLOYMENTSTARTDATE as string,",
+						"          REGULATORYESTABLISHMENTID as string,",
+						"          WORKERTYPE as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> EmploymentV2",
+						"BenefitPlanEmployee, BenefitsCoverageOption join(BenefitPlanEmployee@COVERAGEOPTIONID == BenefitsCoverageOption@COVERAGEOPTIONID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> BenefitPlanCoverageOption",
+						"Worker, Identification join(Worker@PARTYNUMBER == Identification@PARTYNUMBER",
+						"     && \"NINO\" == IDENTIFICATIONTYPEID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'right')~> JoinIdentificationNINO",
+						"JoinIdentificationNINO, WorkerPersonalContact join(PERSONNELNUMBER == WORKERPERSONNELNUMBER,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinContacts",
+						"joinBenefitsandEligibility pivot(groupBy(Worker@PERSONNELNUMBER,",
+						"          VALIDFROM,",
+						"          VALIDTO),",
+						"     pivotBy(NumberedChildRelType, ['Spouse', 'Child 1', 'Child 2', 'Child 3', 'Child 4', 'Child 5', 'Child 6', 'Child 7', 'Child 8', null]),",
+						"     { Last Name} = first(CONTACTLASTNAME),",
+						"          { First Name} = first(CONTACTFIRSTNAME),",
+						"          { Birth Date} = first(WorkerPersonalContact@BIRTHDATE),",
+						"          { Sex} = first(WorkerPersonalContact@GENDER),",
+						"     columnNaming: '$V$N',",
+						"     lateral: false) ~> PivotContacts",
+						"JoinContacts window(over(PERSONNELNUMBER),",
+						"     asc(CONTACTPERSONPARTYNUMBER, true),",
+						"     RankCol = rank()) ~> RankWindow",
+						"RankWindow derive(NumberedChildRelType = iif(equals(RELATIONSHIPTYPE,\"Child\"), concat(RELATIONSHIPTYPE, \" \", toString(RankCol)), RELATIONSHIPTYPE)) ~> AddRank",
+						"PivotContacts, joinBenefitsandEligibility join(PivotContacts@PERSONNELNUMBER == Worker@PERSONNELNUMBER",
+						"     && PivotContacts@VALIDFROM == BenefitPlanEmployee@VALIDFROM",
+						"     && PivotContacts@VALIDTO == BenefitPlanEmployee@VALIDTO,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinBackOtherFields",
+						"AddRank, BenefitPlanCoverageOption join(Worker@PERSONNELNUMBER == BenefitPlanEmployee@PERSONNELNUMBER",
+						"     && RELATIONSHIPTYPE == PERSONALCONTACTSELIGIBILITYOPTIONID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinBenefitsandEligibility",
+						"joinBackOtherFields derive(Initials = concat(left(FIRSTNAME, 1),left(LASTNAME,1))) ~> derivedColumn1",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          {Product } as string,",
+						"          {Type Of Cover} as string,",
+						"          {National Insurance} as string,",
+						"          Location as string,",
+						"          Surname as string,",
+						"          Initial as string,",
+						"          Forename as string,",
+						"          Title as string,",
+						"          DOB as string,",
+						"          Sex as string,",
+						"          Building as string,",
+						"          Street as string,",
+						"          {Sub-Street} as string,",
+						"          {City/Town} as string,",
+						"          {Post Code} as string,",
+						"          Telephone as string,",
+						"          Email as string,",
+						"          {S Title17} as string,",
+						"          {S Title18} as string,",
+						"          {Spouse Surname} as string,",
+						"          {S Forename} as string,",
+						"          {S DOB} as string,",
+						"          {S Sex} as string,",
+						"          Prop_23 as string,",
+						"          {Child 1 Title} as string,",
+						"          {Child 1 Surname} as string,",
+						"          {Child 1 Initial} as string,",
+						"          {Child 1 Forename} as string,",
+						"          {Child 1 DOB} as string,",
+						"          {Child 1 Sex} as string,",
+						"          Prop_30 as string,",
+						"          {Child 2 Title} as string,",
+						"          {Child 2 Surname} as string,",
+						"          {Child 2 Initial} as string,",
+						"          {Child 2 Forename} as string,",
+						"          {Child 2 DOB} as string,",
+						"          {Child 2 Sex} as string,",
+						"          Prop_37 as string,",
+						"          {Child 3 Title} as string,",
+						"          {Child 3 Surname} as string,",
+						"          {Child 3 Initial} as string,",
+						"          {Child 3 Forename} as string,",
+						"          {Child 3 DOB} as string,",
+						"          {Child 3 Sex} as string,",
+						"          {Child 4 Title} as string,",
+						"          {Child 4 Surname} as string,",
+						"          {Child 4 Initial} as string,",
+						"          {Child 4 Forename} as string,",
+						"          {Child 4 DOB} as string,",
+						"          {Child 4 Sex} as string,",
+						"          {Child 5 Title} as string,",
+						"          {Child 5 Surname} as string,",
+						"          {Child 5 Initial} as string,",
+						"          {Child 5 Forename} as string,",
+						"          {Child 5 DOB} as string,",
+						"          {Child 5 Sex} as string,",
+						"          {Child 6 Title} as string,",
+						"          {Child 6 Surname} as string,",
+						"          {Child 6 Initial} as string,",
+						"          {Child 6 Forename} as string,",
+						"          {Child 6 DOB} as string,",
+						"          {Child 6 Sex} as string,",
+						"          {Child 7 Title} as string,",
+						"          {Child 7 Surname} as string,",
+						"          {Child 7 Initial} as string,",
+						"          {Child 7 Forename} as string,",
+						"          {Child 7 DOB} as string,",
+						"          {Child 7 Sex} as string,",
+						"          {Child 8 Title} as string,",
+						"          {Child 8 Surname} as string,",
+						"          {Child 8 Initial} as string,",
+						"          {Child 8 Forename} as string,",
+						"          {Child 8 DOB} as string,",
+						"          {Child 8 Sex} as string",
+						"     ),",
+						"     partitionFileNames:['BupaMedical.csv'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     mapColumn(",
+						"          {Product } = BenefitPlanEmployee@COVERAGEOPTIONID,",
+						"          {Type Of Cover} = PLANID,",
+						"          {National Insurance} = IDENTIFICATIONNUMBER,",
+						"          Location = ADDRESSLOCATIONID,",
+						"          Surname = LASTNAME,",
+						"          Initial = MIDDLENAME,",
+						"          Forename = FIRSTNAME,",
+						"          Title = PERSONALTITLE,",
+						"          DOB = Worker@BIRTHDATE,",
+						"          Sex = Worker@GENDER,",
+						"          Street = ADDRESSSTREET,",
+						"          {City/Town} = ADDRESSCITY,",
+						"          {Post Code} = ADDRESSZIPCODE,",
+						"          Telephone = PRIMARYCONTACTPHONE,",
+						"          Email = IDENTITYEMAIL,",
+						"          {Spouse Surname} = {Spouse Last Name},",
+						"          {S Forename} = {Spouse First Name},",
+						"          {S DOB} = {Spouse Birth Date},",
+						"          {S Sex} = {Spouse Sex},",
+						"          {Child 1 Surname} = {Child 1 Last Name},",
+						"          {Child 1 Forename} = {Child 1 First Name},",
+						"          {Child 1 DOB} = {Child 1 Birth Date},",
+						"          {Child 1 Sex},",
+						"          {Child 2 Surname} = {Child 2 Last Name},",
+						"          {Child 2 Forename} = {Child 2 First Name},",
+						"          {Child 2 DOB} = {Child 2 Birth Date},",
+						"          {Child 2 Sex},",
+						"          {Child 3 Surname} = {Child 3 Last Name},",
+						"          {Child 3 Forename} = {Child 3 First Name},",
+						"          {Child 3 DOB} = {Child 3 Birth Date},",
+						"          {Child 3 Sex},",
+						"          {Child 4 Sex},",
+						"          {Child 5 Sex},",
+						"          {Child 6 Sex},",
+						"          {Child 7 Sex},",
+						"          {Child 8 Sex}",
+						"     ),",
+						"     partitionBy('hash', 1)) ~> ReportOut"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/WorkerExcel')]",
+				"[concat(variables('factoryId'), '/datasets/BenefitPlanEmployeeExcel')]",
+				"[concat(variables('factoryId'), '/datasets/IdentificationExcel')]",
+				"[concat(variables('factoryId'), '/datasets/BenefitsCoverageOptionExcel')]",
+				"[concat(variables('factoryId'), '/datasets/WorkerPersonalContactExcel')]",
+				"[concat(variables('factoryId'), '/datasets/EmploymentV2Excel')]",
+				"[concat(variables('factoryId'), '/datasets/ReportOut')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflowHR_Health Shield')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "WorkerExcel",
+								"type": "DatasetReference"
+							},
+							"name": "Worker"
+						},
+						{
+							"dataset": {
+								"referenceName": "BenefitPlanEmployeeExcel",
+								"type": "DatasetReference"
+							},
+							"name": "BenefitPlanEmployee"
+						},
+						{
+							"dataset": {
+								"referenceName": "IdentificationExcel",
+								"type": "DatasetReference"
+							},
+							"name": "Identification"
+						},
+						{
+							"dataset": {
+								"referenceName": "BenefitsCoverageOptionExcel",
+								"type": "DatasetReference"
+							},
+							"name": "BenefitsCoverageOption"
+						},
+						{
+							"dataset": {
+								"referenceName": "WorkerPersonalContactExcel",
+								"type": "DatasetReference"
+							},
+							"name": "WorkerPersonalContact"
+						},
+						{
+							"dataset": {
+								"referenceName": "EmploymentV2Excel",
+								"type": "DatasetReference"
+							},
+							"name": "EmploymentV2"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "ReportOut",
+								"type": "DatasetReference"
+							},
+							"name": "ReportOut"
+						}
+					],
+					"transformations": [
+						{
+							"name": "BenefitPlanCoverageOption"
+						},
+						{
+							"name": "JoinIdentificationNINO"
+						},
+						{
+							"name": "JoinContacts"
+						},
+						{
+							"name": "PivotContacts",
+							"description": "Pivots a worker's contacts into separate columns."
+						},
+						{
+							"name": "RankWindow"
+						},
+						{
+							"name": "AddRank",
+							"description": "Takes all columns from previous stream and adds a number to the child in a new column based on Relationship type."
+						},
+						{
+							"name": "joinBackOtherFields"
+						},
+						{
+							"name": "joinBenefitsandEligibility"
+						},
+						{
+							"name": "select1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          PERSONNELNUMBER as string,",
+						"          ADDEDFIELDS as string,",
+						"          ADDRESSBOOKS as string,",
+						"          ADDRESSCITY as string,",
+						"          ADDRESSCOUNTRYREGIONID as string,",
+						"          ADDRESSCOUNTRYREGIONISOCODE as string,",
+						"          ADDRESSCOUNTY as string,",
+						"          ADDRESSDISTRICTNAME as string,",
+						"          ADDRESSLOCATIONID as string,",
+						"          ADDRESSNAMEDESCRIPTION as string,",
+						"          ADDRESSPURPOSE as string,",
+						"          ADDRESSSTATE as string,",
+						"          ADDRESSSTREET as string,",
+						"          ADDRESSVALIDFROM as string,",
+						"          ADDRESSVALIDTO as string,",
+						"          ADDRESSZIPCODE as string,",
+						"          ALLOWREHIRE as string,",
+						"          ANNIVERSARYDATETIME as string,",
+						"          BIRTHDATE as string,",
+						"          CITIZENSHIPCOUNTRYREGION as string,",
+						"          DECEASEDDATE as string,",
+						"          DISABLEDVERIFICATIONDATE as string,",
+						"          EDUCATION as string,",
+						"          ELECTRONICLOCATIONID as string,",
+						"          ETHNICORIGINID as string,",
+						"          EXPATRIATERULINGVALIDFROM as string,",
+						"          EXPATRIATERULINGVALIDTO as string,",
+						"          FATHERBIRTHCOUNTRYREGION as string,",
+						"          FIRSTNAME as string,",
+						"          GENDER as string,",
+						"          IDENTITYEMAIL as string,",
+						"          IDENTITYPROVIDER as string,",
+						"          ISDISABLED as string,",
+						"          ISDISABLEDVETERAN as string,",
+						"          ISEXPATRIATERULINGAPPLICABLE as string,",
+						"          ISFULLTIMESTUDENT as string,",
+						"          KNOWNAS as string,",
+						"          LANGUAGEID as string,",
+						"          LASTNAME as string,",
+						"          LASTNAMEPREFIX as string,",
+						"          MARITALSTATUS as string,",
+						"          MIDDLENAME as string,",
+						"          MILITARYSERVICEENDDATE as string,",
+						"          MILITARYSERVICESTARTDATE as string,",
+						"          MOTHERBIRTHCOUNTRYREGION as string,",
+						"          NAME as string,",
+						"          NAMEALIAS as string,",
+						"          NAMESEQUENCEDISPLAYAS as string,",
+						"          NATIONALITYCOUNTRYREGION as string,",
+						"          NATIVELANGUAGEID as string,",
+						"          NUMBEROFDEPENDENTS as string,",
+						"          OBJECTID as string,",
+						"          OFFICELOCATION as string,",
+						"          OFFICELOCATIONID as string,",
+						"          ORIGINALHIREDATETIME as string,",
+						"          PARTYNUMBER as string,",
+						"          PARTYTYPE as string,",
+						"          PERSONALSUFFIX as string,",
+						"          PERSONALTITLE as string,",
+						"          PERSONBIRTHCITY as string,",
+						"          PERSONBIRTHCOUNTRYREGION as string,",
+						"          PERSONDETAILSVALIDFROM as string,",
+						"          PERSONDETAILSVALIDTO as string,",
+						"          PERSONUSERVALIDFROM as string,",
+						"          PERSONUSERVALIDTO as string,",
+						"          PHONETICFIRSTNAME as string,",
+						"          PHONETICLASTNAME as string,",
+						"          PHONETICMIDDLENAME as string,",
+						"          PRIMARYADDRESSLOCATION as string,",
+						"          PRIMARYCONTACTEMAIL as string,",
+						"          PRIMARYCONTACTEMAILDESCRIPTION as string,",
+						"          PRIMARYCONTACTEMAILISIM as string,",
+						"          PRIMARYCONTACTEMAILISPRIVATE as string,",
+						"          PRIMARYCONTACTEMAILPURPOSE as string,",
+						"          PRIMARYCONTACTFACEBOOK as string,",
+						"          PRIMARYCONTACTFACEBOOKDESCRIPTION as string,",
+						"          PRIMARYCONTACTFACEBOOKISPRIVATE as string,",
+						"          PRIMARYCONTACTFACEBOOKPURPOSE as string,",
+						"          PRIMARYCONTACTFAX as string,",
+						"          PRIMARYCONTACTFAXDESCRIPTION as string,",
+						"          PRIMARYCONTACTFAXEXTENSION as string,",
+						"          PRIMARYCONTACTFAXISPRIVATE as string,",
+						"          PRIMARYCONTACTFAXPURPOSE as string,",
+						"          PRIMARYCONTACTLINKEDIN as string,",
+						"          PRIMARYCONTACTLINKEDINDESCRIPTION as string,",
+						"          PRIMARYCONTACTLINKEDINISPRIVATE as string,",
+						"          PRIMARYCONTACTLINKEDINPURPOSE as string,",
+						"          PRIMARYCONTACTPHONE as string,",
+						"          PRIMARYCONTACTPHONEDESCRIPTION as string,",
+						"          PRIMARYCONTACTPHONEEXTENSION as string,",
+						"          PRIMARYCONTACTPHONEISMOBILE as string,",
+						"          PRIMARYCONTACTPHONEISPRIVATE as string,",
+						"          PRIMARYCONTACTPHONEPURPOSE as string,",
+						"          PRIMARYCONTACTTWITTER as string,",
+						"          PRIMARYCONTACTTWITTERDESCRIPTION as string,",
+						"          PRIMARYCONTACTTWITTERISPRIVATE as string,",
+						"          PRIMARYCONTACTTWITTERPURPOSE as string,",
+						"          PRIMARYCONTACTURL as string,",
+						"          PRIMARYCONTACTURLDESCRIPTION as string,",
+						"          PRIMARYCONTACTURLISPRIVATE as string,",
+						"          PRIMARYCONTACTURLPURPOSE as string,",
+						"          PROFESSIONALSUFFIX as string,",
+						"          PROFESSIONALTITLE as string,",
+						"          SENIORITYDATE as string,",
+						"          SUMMARYVALIDFROM as string,",
+						"          SUMMARYVALIDTO as string,",
+						"          TITLEID as string,",
+						"          USER as string,",
+						"          VETERANSTATUSID as string,",
+						"          WORKERSTATUS as string,",
+						"          WORKERTYPE as string,",
+						"          WORKSFROMHOME as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Worker",
+						"source(output(",
+						"          PERSONNELNUMBER as string,",
+						"          PLANPERIODID as string,",
+						"          PLANID as string,",
+						"          COVERAGEOPTIONID as string,",
+						"          VALIDFROM as string,",
+						"          VALIDTO as string,",
+						"          ADMINISTRATIVESTARTDATETIME as string,",
+						"          AMOUNTADMIN as string,",
+						"          AMOUNTEMPLOYEE as string,",
+						"          AMOUNTEMPLOYER as string,",
+						"          ANNUALCONTRIBUTION as string,",
+						"          BUNDLEDID as string,",
+						"          BUNDLEMASTER as string,",
+						"          CANCELLATION as string,",
+						"          CANCELLATIONBY as string,",
+						"          CANCELLATIONDATETIME as string,",
+						"          CANCELREASONCODEID as string,",
+						"          COVERAGEAMOUNT as string,",
+						"          COVERAGECODE as string,",
+						"          COVERAGEENDDATETIME as string,",
+						"          COVERAGESTARTDATETIME as string,",
+						"          CREDITAPPLIEDVALUE as string,",
+						"          CREDITHASRATE as string,",
+						"          CREDITLIFEEVENTOPENALLOCATION as string,",
+						"          CREDITLIFEEVENTPREVENTADDALLOCATION as string,",
+						"          CREDITLIFEEVENTPREVENTSUBALLOCATION as string,",
+						"          DEDUCTIONENDDATETIME as string,",
+						"          DEDUCTIONSTARTDATETIME as string,",
+						"          DEFAULTOPTION as string,",
+						"          ENROLLMENTCONFIRMED as string,",
+						"          ENROLLMENTCONFIRMEDBY as string,",
+						"          ENROLLMENTCONFIRMEDDATETIME as string,",
+						"          ENROLLMENTSTARTDATETIME as string,",
+						"          ESSCHECKEDOUT as string,",
+						"          LEGALENTITYID as string,",
+						"          LIFEEVENT as string,",
+						"          LIFEEVENTALLOWCANCELLATION as string,",
+						"          LIFEEVENTALLOWCANCELLATIONPREV as string,",
+						"          LIFEEVENTAUTOCANCELPLAN as string,",
+						"          LIFEEVENTAUTOCANCELPLANPREV as string,",
+						"          LIFEEVENTAUTOREOPENELIGIBILITY as string,",
+						"          LIFEEVENTAUTOREOPENELIGIBILITYPREV as string,",
+						"          LIFEEVENTCHANGECOVERAGE as string,",
+						"          LIFEEVENTCHANGECOVERAGEPREV as string,",
+						"          LIFEEVENTCHANGETONEWPLAN as string,",
+						"          LIFEEVENTCHANGETONEWPLANPREV as string,",
+						"          LIFEEVENTPREV as string,",
+						"          LIFEEVENTREPORTINGWINDOW as string,",
+						"          LIFEEVENTREPORTINGWINDOWPREV as string,",
+						"          LIFEEVENTTYPES as string,",
+						"          PAYPERIOD as string,",
+						"          PERCENTAGE as string,",
+						"          PERIODEMPLOYEENAME as string,",
+						"          PLANDESCRIPTION as string,",
+						"          PLANTYPECODE as string,",
+						"          PLANTYPEDESIGNEETYPE as string,",
+						"          PLANTYPEID as string,",
+						"          PROGRAMID as string,",
+						"          REASONCODEID as string,",
+						"          REOPENREASONCODEID as string,",
+						"          STATUS as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> BenefitPlanEmployee",
+						"source(output(",
+						"          PARTYNUMBER as string,",
+						"          IDENTIFICATIONTYPEID as string,",
+						"          IDENTIFICATIONNUMBER as string,",
+						"          DESCRIPTION as string,",
+						"          ENTRYTYPE as string,",
+						"          EXPIRATIONDATE as string,",
+						"          ISPRIMARY as string,",
+						"          ISSUEDDATE as string,",
+						"          ISSUINGAGENCYID as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> Identification",
+						"source(output(",
+						"          COVERAGEOPTIONID as string,",
+						"          PERSONALCONTACTSELIGIBILITYOPTIONID as string",
+						"     ),",
+						"     allowSchemaDrift: false,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> BenefitsCoverageOption",
+						"source(output(",
+						"          WORKERPERSONNELNUMBER as string,",
+						"          CONTACTPERSONPARTYNUMBER as string,",
+						"          RELATIONSHIPTYPE as string,",
+						"          RELATIONSHIPVALIDFROM as string,",
+						"          BIRTHDATE as string,",
+						"          CONTACTFIRSTNAME as string,",
+						"          CONTACTLASTNAME as string,",
+						"          CONTACTLASTNAMEPREFIX as string,",
+						"          CONTACTMIDDLENAME as string,",
+						"          DEPENDENTCOURTORDEREDEXPIRATIONDATE as string,",
+						"          DISABLEDVERIFICATIONDATE as string,",
+						"          EMERGENCYCONTACTPRIMARYSECONDARY as string,",
+						"          GENDER as string,",
+						"          ISBENEFICIARY as string,",
+						"          ISDEPENDENT as string,",
+						"          ISDEPENDENTCOURTORDERED as string,",
+						"          ISDEPENDENTDOMESTICPARTNERVERIFIED as string,",
+						"          ISDISABLED as string,",
+						"          ISEMERGENCYCONTACT as string,",
+						"          ISFULLTIMESTUDENT as string,",
+						"          RELATIONSHIPVALIDTO as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> WorkerPersonalContact",
+						"source(output(",
+						"          PERSONNELNUMBER as string,",
+						"          LEGALENTITYID as string,",
+						"          EMPLOYMENTID as string,",
+						"          CALENDARID as string,",
+						"          DIMENSIONDISPLAYVALUE as string,",
+						"          EMPLOYMENTENDDATE as string,",
+						"          EMPLOYMENTSTARTDATE as string,",
+						"          REGULATORYESTABLISHMENTID as string,",
+						"          WORKERTYPE as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> EmploymentV2",
+						"BenefitPlanEmployee, BenefitsCoverageOption join(BenefitPlanEmployee@COVERAGEOPTIONID == BenefitsCoverageOption@COVERAGEOPTIONID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> BenefitPlanCoverageOption",
+						"Worker, Identification join(Worker@PARTYNUMBER == Identification@PARTYNUMBER",
+						"     && \"NINO\" == IDENTIFICATIONTYPEID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'right')~> JoinIdentificationNINO",
+						"JoinIdentificationNINO, WorkerPersonalContact join(PERSONNELNUMBER == WORKERPERSONNELNUMBER,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinContacts",
+						"joinBenefitsandEligibility pivot(groupBy(Worker@PERSONNELNUMBER,",
+						"          VALIDFROM,",
+						"          VALIDTO),",
+						"     pivotBy(NumberedChildRelType, ['Spouse', 'Child 1', 'Child 2', 'Child 3', 'Child 4', 'Child 5', 'Child 6', 'Child 7', 'Child 8', null]),",
+						"     { Last Name} = first(CONTACTLASTNAME),",
+						"          { First Name} = first(CONTACTFIRSTNAME),",
+						"          { Birth Date} = first(WorkerPersonalContact@BIRTHDATE),",
+						"          { Sex} = first(WorkerPersonalContact@GENDER),",
+						"     columnNaming: '$V$N',",
+						"     lateral: false) ~> PivotContacts",
+						"JoinContacts window(over(PERSONNELNUMBER),",
+						"     asc(CONTACTPERSONPARTYNUMBER, true),",
+						"     RankCol = rank()) ~> RankWindow",
+						"RankWindow derive(NumberedChildRelType = iif(equals(RELATIONSHIPTYPE,\"Child\"), concat(RELATIONSHIPTYPE, \" \", toString(RankCol)), RELATIONSHIPTYPE)) ~> AddRank",
+						"PivotContacts, joinBenefitsandEligibility join(PivotContacts@PERSONNELNUMBER == Worker@PERSONNELNUMBER",
+						"     && PivotContacts@VALIDFROM == BenefitPlanEmployee@VALIDFROM",
+						"     && PivotContacts@VALIDTO == BenefitPlanEmployee@VALIDTO,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinBackOtherFields",
+						"AddRank, BenefitPlanCoverageOption join(Worker@PERSONNELNUMBER == BenefitPlanEmployee@PERSONNELNUMBER",
+						"     && RELATIONSHIPTYPE == PERSONALCONTACTSELIGIBILITYOPTIONID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinBenefitsandEligibility",
+						"joinBackOtherFields select(mapColumn(",
+						"          {First Name} = FIRSTNAME,",
+						"          Surname = LASTNAME,",
+						"          {Address Line 1} = ADDRESSSTREET,",
+						"          City = ADDRESSCITY,",
+						"          County = ADDRESSCOUNTY,",
+						"          Postcode = ADDRESSZIPCODE,",
+						"          {Birth/Date (DD/MM/YYYY)} = Worker@BIRTHDATE,",
+						"          {Personal Email Address} = IDENTITYEMAIL,",
+						"          {Payroll Number or Unique Employee Reference Number } = PivotContacts@PERSONNELNUMBER,",
+						"          {Customer Name} = PERIODEMPLOYEENAME,",
+						"          Location = PRIMARYADDRESSLOCATION,",
+						"          {Company Paid Cover} = AMOUNTEMPLOYEE,",
+						"          {Partner First Name} = CONTACTFIRSTNAME,",
+						"          {Partner Surname} = CONTACTLASTNAME,",
+						"          {Partner Birth/Date (DD/MM/YYYY)} = WorkerPersonalContact@BIRTHDATE",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          {Product } as string,",
+						"          {Type Of Cover} as string,",
+						"          {National Insurance} as string,",
+						"          Location as string,",
+						"          Surname as string,",
+						"          Initial as string,",
+						"          Forename as string,",
+						"          Title as string,",
+						"          DOB as string,",
+						"          Sex as string,",
+						"          Building as string,",
+						"          Street as string,",
+						"          {Sub-Street} as string,",
+						"          {City/Town} as string,",
+						"          {Post Code} as string,",
+						"          Telephone as string,",
+						"          Email as string,",
+						"          {S Title17} as string,",
+						"          {S Title18} as string,",
+						"          {Spouse Surname} as string,",
+						"          {S Forename} as string,",
+						"          {S DOB} as string,",
+						"          {S Sex} as string,",
+						"          Prop_23 as string,",
+						"          {Child 1 Title} as string,",
+						"          {Child 1 Surname} as string,",
+						"          {Child 1 Initial} as string,",
+						"          {Child 1 Forename} as string,",
+						"          {Child 1 DOB} as string,",
+						"          {Child 1 Sex} as string,",
+						"          Prop_30 as string,",
+						"          {Child 2 Title} as string,",
+						"          {Child 2 Surname} as string,",
+						"          {Child 2 Initial} as string,",
+						"          {Child 2 Forename} as string,",
+						"          {Child 2 DOB} as string,",
+						"          {Child 2 Sex} as string,",
+						"          Prop_37 as string,",
+						"          {Child 3 Title} as string,",
+						"          {Child 3 Surname} as string,",
+						"          {Child 3 Initial} as string,",
+						"          {Child 3 Forename} as string,",
+						"          {Child 3 DOB} as string,",
+						"          {Child 3 Sex} as string,",
+						"          {Child 4 Title} as string,",
+						"          {Child 4 Surname} as string,",
+						"          {Child 4 Initial} as string,",
+						"          {Child 4 Forename} as string,",
+						"          {Child 4 DOB} as string,",
+						"          {Child 4 Sex} as string,",
+						"          {Child 5 Title} as string,",
+						"          {Child 5 Surname} as string,",
+						"          {Child 5 Initial} as string,",
+						"          {Child 5 Forename} as string,",
+						"          {Child 5 DOB} as string,",
+						"          {Child 5 Sex} as string,",
+						"          {Child 6 Title} as string,",
+						"          {Child 6 Surname} as string,",
+						"          {Child 6 Initial} as string,",
+						"          {Child 6 Forename} as string,",
+						"          {Child 6 DOB} as string,",
+						"          {Child 6 Sex} as string,",
+						"          {Child 7 Title} as string,",
+						"          {Child 7 Surname} as string,",
+						"          {Child 7 Initial} as string,",
+						"          {Child 7 Forename} as string,",
+						"          {Child 7 DOB} as string,",
+						"          {Child 7 Sex} as string,",
+						"          {Child 8 Title} as string,",
+						"          {Child 8 Surname} as string,",
+						"          {Child 8 Initial} as string,",
+						"          {Child 8 Forename} as string,",
+						"          {Child 8 DOB} as string,",
+						"          {Child 8 Sex} as string",
+						"     ),",
+						"     partitionFileNames:['Health Shield.csv'],",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     partitionBy('hash', 1)) ~> ReportOut"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/WorkerExcel')]",
+				"[concat(variables('factoryId'), '/datasets/BenefitPlanEmployeeExcel')]",
+				"[concat(variables('factoryId'), '/datasets/IdentificationExcel')]",
+				"[concat(variables('factoryId'), '/datasets/BenefitsCoverageOptionExcel')]",
+				"[concat(variables('factoryId'), '/datasets/WorkerPersonalContactExcel')]",
+				"[concat(variables('factoryId'), '/datasets/EmploymentV2Excel')]",
+				"[concat(variables('factoryId'), '/datasets/ReportOut')]"
+			]
+		}
+	]
+}

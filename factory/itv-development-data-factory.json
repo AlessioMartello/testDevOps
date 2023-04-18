@@ -1,5 +1,13 @@
 {
 	"name": "itv-development-data-factory",
+	"properties": {
+		"globalParameters": {
+			"testDevGlobalParam": {
+				"type": "string",
+				"value": "dev"
+			}
+		}
+	},
 	"location": "eastus",
 	"identity": {
 		"type": "SystemAssigned",

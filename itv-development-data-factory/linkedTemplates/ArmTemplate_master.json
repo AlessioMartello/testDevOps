@@ -19,6 +19,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'sandbox_db'"
 		},
+		"AzureSqlDatabase1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureSqlDatabase1'"
+		},
 		"DataLakeStorageLinkedService_properties_typeProperties_url": {
 			"type": "string",
 			"defaultValue": "https://dataflowtest32245.dfs.core.windows.net/"
@@ -70,6 +74,9 @@
 					},
 					"sandbox_db_connectionString": {
 						"value": "[parameters('sandbox_db_connectionString')]"
+					},
+					"AzureSqlDatabase1_connectionString": {
+						"value": "[parameters('AzureSqlDatabase1_connectionString')]"
 					},
 					"DataLakeStorageLinkedService_properties_typeProperties_url": {
 						"value": "[parameters('DataLakeStorageLinkedService_properties_typeProperties_url')]"

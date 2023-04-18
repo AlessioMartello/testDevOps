@@ -14,6 +14,9 @@
 		"sandbox_db_connectionString": {
 			"value": ""
 		},
+		"AzureSqlDatabase1_connectionString": {
+			"value": ""
+		},
 		"DataLakeStorageLinkedService_properties_typeProperties_url": {
 			"value": "https://dataflowtest32245.dfs.core.windows.net/"
 		},

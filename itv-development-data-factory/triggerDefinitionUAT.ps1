@@ -7,7 +7,7 @@ $triggerStartTime =[int]$testArgPS
 
 Write-Host "Api Management Service Name: $($triggerStartTime)"
 
-$ def = {
+$def = "{
     "name": "trigger1",
     "properties": {
         "annotations": [],
@@ -35,11 +35,11 @@ $ def = {
             }
         }
     }
-}
+}"
 
 
 Stop-AzDataFactoryV2Trigger -ResourceGroupName "rg-devops-deploy-dev" -DataFactoryName "Target-ADF" -TriggerName "trigger1" -Force
 
-Set-AzDataFactoryV2Trigger -ResourceGroupName "rg-devops-deploy-dev" -DataFactoryName "Target-ADF" -Name "trigger1" -DefinitionFile "$(System.DefaultWorkingDirectory)/_amartello-CI/drop/triggerDefinitionUAT.json" -Force
+Set-AzDataFactoryV2Trigger -ResourceGroupName "rg-devops-deploy-dev" -DataFactoryName "Target-ADF" -Name "trigger1" -DefinitionFile $def -Force
 
 Start-AzDataFactoryV2Trigger -ResourceGroupName "rg-devops-deploy-dev" -DataFactoryName "Target-ADF" -TriggerName "trigger1" -Force

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param (
-    $testArgPS,
+    $testArgPS
 )
 
 $apimServiceName = $testArgPS

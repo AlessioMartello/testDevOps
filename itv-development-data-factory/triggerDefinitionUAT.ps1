@@ -30,7 +30,7 @@ $def = @"
                 "timeZone": "UTC",
                 "schedule": {
                     "hours": [
-                        $triggerStartTime
+                        12
                     ]
                 }
             }

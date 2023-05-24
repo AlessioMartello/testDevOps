@@ -7,7 +7,8 @@ $triggerStartTime =[int]$testArgPS
 
 Write-Host "Api Management Service Name: $($triggerStartTime)"
 
-$def = @"{
+$def = @"
+{
     "name": "trigger1",
     "properties": {
         "annotations": [],
@@ -35,7 +36,8 @@ $def = @"{
             }
         }
     }
-}"@
+}
+"@
 
 
 Stop-AzDataFactoryV2Trigger -ResourceGroupName "rg-devops-deploy-dev" -DataFactoryName "Target-ADF" -TriggerName "trigger1" -Force

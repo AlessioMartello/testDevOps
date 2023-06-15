@@ -63,30 +63,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/test')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Wait1",
-						"type": "Wait",
-						"dependsOn": [],
-						"userProperties": [],
-						"typeProperties": {
-							"waitTimeInSeconds": 1
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/AzureSqlDatabase1')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -171,6 +147,31 @@
 				"typeProperties": {
 					"connectionString": "[parameters('sandbox_db_connectionString')]"
 				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Fail1",
+						"type": "Fail",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"message": "this failed",
+							"errorCode": "500"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
 			},
 			"dependsOn": []
 		},
@@ -453,6 +454,12 @@
 								]
 							}
 						],
+						"policy": {
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
 						"userProperties": [],
 						"typeProperties": {
 							"variableName": "contentLength",
@@ -477,6 +484,46 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/sandbox_db')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/test')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 1
+						}
+					},
+					{
+						"name": "pipeline1",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pipeline1",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pipeline1')]"
 			]
 		},
 		{
@@ -1872,117 +1919,6 @@
 					},
 					{
 						"name": "WORKSFROMHOME",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/WorkerPersonalContactExcel')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "DataLakeStorageLinkedService",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Excel",
-				"typeProperties": {
-					"sheetName": "Worker_personal_contact_person",
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "Worker personal contact person Demo.xlsx",
-						"fileSystem": "data"
-					},
-					"firstRowAsHeader": true
-				},
-				"schema": [
-					{
-						"name": "WORKERPERSONNELNUMBER",
-						"type": "String"
-					},
-					{
-						"name": "CONTACTPERSONPARTYNUMBER",
-						"type": "String"
-					},
-					{
-						"name": "RELATIONSHIPTYPE",
-						"type": "String"
-					},
-					{
-						"name": "RELATIONSHIPVALIDFROM",
-						"type": "String"
-					},
-					{
-						"name": "BIRTHDATE",
-						"type": "String"
-					},
-					{
-						"name": "CONTACTFIRSTNAME",
-						"type": "String"
-					},
-					{
-						"name": "CONTACTLASTNAME",
-						"type": "String"
-					},
-					{
-						"name": "CONTACTLASTNAMEPREFIX",
-						"type": "String"
-					},
-					{
-						"name": "CONTACTMIDDLENAME",
-						"type": "String"
-					},
-					{
-						"name": "DEPENDENTCOURTORDEREDEXPIRATIONDATE",
-						"type": "String"
-					},
-					{
-						"name": "DISABLEDVERIFICATIONDATE",
-						"type": "String"
-					},
-					{
-						"name": "EMERGENCYCONTACTPRIMARYSECONDARY",
-						"type": "String"
-					},
-					{
-						"name": "GENDER",
-						"type": "String"
-					},
-					{
-						"name": "ISBENEFICIARY",
-						"type": "String"
-					},
-					{
-						"name": "ISDEPENDENT",
-						"type": "String"
-					},
-					{
-						"name": "ISDEPENDENTCOURTORDERED",
-						"type": "String"
-					},
-					{
-						"name": "ISDEPENDENTDOMESTICPARTNERVERIFIED",
-						"type": "String"
-					},
-					{
-						"name": "ISDISABLED",
-						"type": "String"
-					},
-					{
-						"name": "ISEMERGENCYCONTACT",
-						"type": "String"
-					},
-					{
-						"name": "ISFULLTIMESTUDENT",
-						"type": "String"
-					},
-					{
-						"name": "RELATIONSHIPVALIDTO",
 						"type": "String"
 					}
 				]

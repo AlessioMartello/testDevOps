@@ -10,33 +10,6 @@
 				"typeProperties": {
 					"waitTimeInSeconds": 1
 				}
-			},
-			{
-				"name": "ForEach1",
-				"type": "ForEach",
-				"dependsOn": [],
-				"userProperties": [],
-				"typeProperties": {
-					"items": {
-						"value": "[1,2]",
-						"type": "Expression"
-					},
-					"activities": [
-						{
-							"name": "pipeline1",
-							"type": "ExecutePipeline",
-							"dependsOn": [],
-							"userProperties": [],
-							"typeProperties": {
-								"pipeline": {
-									"referenceName": "pipeline1",
-									"type": "PipelineReference"
-								},
-								"waitOnCompletion": true
-							}
-						}
-					]
-				}
 			}
 		],
 		"annotations": []

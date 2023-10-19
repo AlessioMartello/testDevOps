@@ -92,18 +92,70 @@
 			"properties": {
 				"activities": [
 					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 10
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/sub pipeline 1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
 						"name": "Fail1",
 						"type": "Fail",
 						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
-							"message": "this failed",
+							"message": "ttt",
 							"errorCode": "500"
 						}
 					}
 				],
 				"policy": {
 					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "test monitor"
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/sub pipeline 2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Wait1",
+						"type": "Wait",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"waitTimeInSeconds": 10
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "test monitor"
 				},
 				"annotations": []
 			},
@@ -526,6 +578,61 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/sandbox_db')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/orch')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "sub pipeline 1",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "sub pipeline 2",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "sub pipeline 1",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "sub pipeline 2",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "sub pipeline 2",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"folder": {
+					"name": "test monitor"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/sub pipeline 1')]",
+				"[concat(variables('factoryId'), '/pipelines/sub pipeline 2')]"
 			]
 		},
 		{
@@ -1045,413 +1152,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/sandbox_db')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/Fields_rest')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "Field_api",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "RestResource",
-				"typeProperties": {},
-				"schema": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/Field_api')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/IdentificationExcel')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "DataLakeStorageLinkedService",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "Excel",
-				"typeProperties": {
-					"sheetName": "Identification",
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "Identification Demo.xlsx",
-						"fileSystem": "data"
-					},
-					"firstRowAsHeader": true
-				},
-				"schema": [
-					{
-						"name": "PARTYNUMBER",
-						"type": "String"
-					},
-					{
-						"name": "IDENTIFICATIONTYPEID",
-						"type": "String"
-					},
-					{
-						"name": "IDENTIFICATIONNUMBER",
-						"type": "String"
-					},
-					{
-						"name": "DESCRIPTION",
-						"type": "String"
-					},
-					{
-						"name": "ENTRYTYPE",
-						"type": "String"
-					},
-					{
-						"name": "EXPIRATIONDATE",
-						"type": "String"
-					},
-					{
-						"name": "ISPRIMARY",
-						"type": "String"
-					},
-					{
-						"name": "ISSUEDDATE",
-						"type": "String"
-					},
-					{
-						"name": "ISSUINGAGENCYID",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/ReportOut')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "DataLakeStorageLinkedService",
-					"type": "LinkedServiceReference"
-				},
-				"annotations": [],
-				"type": "DelimitedText",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"fileName": "Report1 Blank.csv",
-						"folderPath": "output",
-						"fileSystem": "data"
-					},
-					"columnDelimiter": ",",
-					"escapeChar": "\\",
-					"firstRowAsHeader": true,
-					"quoteChar": "\""
-				},
-				"schema": [
-					{
-						"name": "Product ",
-						"type": "String"
-					},
-					{
-						"name": "Type Of Cover",
-						"type": "String"
-					},
-					{
-						"name": "National Insurance",
-						"type": "String"
-					},
-					{
-						"name": "Location",
-						"type": "String"
-					},
-					{
-						"name": "Surname",
-						"type": "String"
-					},
-					{
-						"name": "Initial",
-						"type": "String"
-					},
-					{
-						"name": "Forename",
-						"type": "String"
-					},
-					{
-						"name": "Title",
-						"type": "String"
-					},
-					{
-						"name": "DOB",
-						"type": "String"
-					},
-					{
-						"name": "Sex",
-						"type": "String"
-					},
-					{
-						"name": "Building",
-						"type": "String"
-					},
-					{
-						"name": "Street",
-						"type": "String"
-					},
-					{
-						"name": "Sub-Street",
-						"type": "String"
-					},
-					{
-						"name": "City/Town",
-						"type": "String"
-					},
-					{
-						"name": "Post Code",
-						"type": "String"
-					},
-					{
-						"name": "Telephone",
-						"type": "String"
-					},
-					{
-						"name": "Email",
-						"type": "String"
-					},
-					{
-						"name": "S Title17",
-						"type": "String"
-					},
-					{
-						"name": "S Title18",
-						"type": "String"
-					},
-					{
-						"name": "Spouse Surname",
-						"type": "String"
-					},
-					{
-						"name": "S Forename",
-						"type": "String"
-					},
-					{
-						"name": "S DOB",
-						"type": "String"
-					},
-					{
-						"name": "S Sex",
-						"type": "String"
-					},
-					{
-						"name": "Prop_23",
-						"type": "String"
-					},
-					{
-						"name": "Child 1 Title",
-						"type": "String"
-					},
-					{
-						"name": "Child 1 Surname",
-						"type": "String"
-					},
-					{
-						"name": "Child 1 Initial",
-						"type": "String"
-					},
-					{
-						"name": "Child 1 Forename",
-						"type": "String"
-					},
-					{
-						"name": "Child 1 DOB",
-						"type": "String"
-					},
-					{
-						"name": "Child 1 Sex",
-						"type": "String"
-					},
-					{
-						"name": "Prop_30",
-						"type": "String"
-					},
-					{
-						"name": "Child 2 Title",
-						"type": "String"
-					},
-					{
-						"name": "Child 2 Surname",
-						"type": "String"
-					},
-					{
-						"name": "Child 2 Initial",
-						"type": "String"
-					},
-					{
-						"name": "Child 2 Forename",
-						"type": "String"
-					},
-					{
-						"name": "Child 2 DOB",
-						"type": "String"
-					},
-					{
-						"name": "Child 2 Sex",
-						"type": "String"
-					},
-					{
-						"name": "Prop_37",
-						"type": "String"
-					},
-					{
-						"name": "Child 3 Title",
-						"type": "String"
-					},
-					{
-						"name": "Child 3 Surname",
-						"type": "String"
-					},
-					{
-						"name": "Child 3 Initial",
-						"type": "String"
-					},
-					{
-						"name": "Child 3 Forename",
-						"type": "String"
-					},
-					{
-						"name": "Child 3 DOB",
-						"type": "String"
-					},
-					{
-						"name": "Child 3 Sex",
-						"type": "String"
-					},
-					{
-						"name": "Child 4 Title",
-						"type": "String"
-					},
-					{
-						"name": "Child 4 Surname",
-						"type": "String"
-					},
-					{
-						"name": "Child 4 Initial",
-						"type": "String"
-					},
-					{
-						"name": "Child 4 Forename",
-						"type": "String"
-					},
-					{
-						"name": "Child 4 DOB",
-						"type": "String"
-					},
-					{
-						"name": "Child 4 Sex",
-						"type": "String"
-					},
-					{
-						"name": "Child 5 Title",
-						"type": "String"
-					},
-					{
-						"name": "Child 5 Surname",
-						"type": "String"
-					},
-					{
-						"name": "Child 5 Initial",
-						"type": "String"
-					},
-					{
-						"name": "Child 5 Forename",
-						"type": "String"
-					},
-					{
-						"name": "Child 5 DOB",
-						"type": "String"
-					},
-					{
-						"name": "Child 5 Sex",
-						"type": "String"
-					},
-					{
-						"name": "Child 6 Title",
-						"type": "String"
-					},
-					{
-						"name": "Child 6 Surname",
-						"type": "String"
-					},
-					{
-						"name": "Child 6 Initial",
-						"type": "String"
-					},
-					{
-						"name": "Child 6 Forename",
-						"type": "String"
-					},
-					{
-						"name": "Child 6 DOB",
-						"type": "String"
-					},
-					{
-						"name": "Child 6 Sex",
-						"type": "String"
-					},
-					{
-						"name": "Child 7 Title",
-						"type": "String"
-					},
-					{
-						"name": "Child 7 Surname",
-						"type": "String"
-					},
-					{
-						"name": "Child 7 Initial",
-						"type": "String"
-					},
-					{
-						"name": "Child 7 Forename",
-						"type": "String"
-					},
-					{
-						"name": "Child 7 DOB",
-						"type": "String"
-					},
-					{
-						"name": "Child 7 Sex",
-						"type": "String"
-					},
-					{
-						"name": "Child 8 Title",
-						"type": "String"
-					},
-					{
-						"name": "Child 8 Surname",
-						"type": "String"
-					},
-					{
-						"name": "Child 8 Initial",
-						"type": "String"
-					},
-					{
-						"name": "Child 8 Forename",
-						"type": "String"
-					},
-					{
-						"name": "Child 8 DOB",
-						"type": "String"
-					},
-					{
-						"name": "Child 8 Sex",
-						"type": "String"
-					}
-				]
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/DataLakeStorageLinkedService')]"
 			]
 		}
 	]

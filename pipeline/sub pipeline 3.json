@@ -1,0 +1,20 @@
+{
+	"name": "sub pipeline 3",
+	"properties": {
+		"activities": [
+			{
+				"name": "Wait1",
+				"type": "Wait",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"waitTimeInSeconds": 1
+				}
+			}
+		],
+		"folder": {
+			"name": "test monitor"
+		},
+		"annotations": []
+	}
+}

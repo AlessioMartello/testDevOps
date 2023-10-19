@@ -1,0 +1,44 @@
+{
+	"name": "orch",
+	"properties": {
+		"activities": [
+			{
+				"name": "sub pipeline 1",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "sub pipeline 2",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "sub pipeline 1",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "sub pipeline 2",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "sub pipeline 2",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"folder": {
+			"name": "test monitor"
+		},
+		"annotations": []
+	}
+}

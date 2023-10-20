@@ -3,13 +3,12 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Fail1",
-				"type": "Fail",
+				"name": "Wait1",
+				"type": "Wait",
 				"dependsOn": [],
 				"userProperties": [],
 				"typeProperties": {
-					"message": "ttt",
-					"errorCode": "500"
+					"waitTimeInSeconds": 1
 				}
 			}
 		],
